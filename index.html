@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Everstage · LinkedIn Budget Dashboard — Cold Campaigns</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2fa;color:#1a1a2e;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+.sidebar{width:220px;min-width:220px;background:#14142a;display:flex;flex-direction:column;height:100vh;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sb-header{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:2px}
+.sb-logo-mark{width:30px;height:30px;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+.sb-title{font-size:13px;font-weight:700;color:#fff;line-height:1.3}
+.sb-sub{font-size:10px;color:#5c5e88;margin-top:4px;line-height:1.5}
+.nav-section{padding:16px 0 4px}
+.nav-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#3a3a60;padding:0 18px 6px}
+.nav-item{display:flex;align-items:center;width:100%;padding:8px 18px;font-size:12px;font-weight:500;color:#7b7fa8;background:none;border:none;border-left:3px solid transparent;cursor:pointer;text-align:left;transition:all .15s;gap:9px}
+.nav-item:hover{color:#c0c4e0;background:rgba(255,255,255,0.04)}
+.nav-item.active{color:#fff;border-left-color:#6366f1;background:rgba(99,102,241,0.12);font-weight:600}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.06)}
+.sb-badge{background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:6px 10px;font-size:10px;color:#8b8fd4;line-height:1.4}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid #e8eaf2;padding:10px 26px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-size:14px;font-weight:700;color:#1a1a2e}
+.page-sub{font-size:11px;color:#9497b5;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tag{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.tag-blue{background:#EEF2FF;color:#6366f1}
+.tag-green{background:#F0FDF4;color:#16a34a}
+.panel-area{flex:1;overflow-y:auto;padding:20px 26px 36px;scrollbar-width:thin;scrollbar-color:#d1d5e8 transparent}
+.panel{display:none}.panel.active{display:block}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #eef0f8}
+.kpi-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kpi-icon{font-size:12px}
+.kpi-val{font-size:22px;font-weight:800;color:#1a1a2e;line-height:1;letter-spacing:-.5px}
+.kpi-sub{font-size:10.5px;color:#9497b5;margin-top:5px}
+.kpi-accent{border-top:3px solid transparent}
+.kpi-accent-blue{border-top-color:#6366f1}
+.kpi-accent-green{border-top-color:#10b981}
+.kpi-accent-orange{border-top-color:#f59e0b}
+.kpi-accent-red{border-top-color:#ef4444}
+.kpi-accent-purple{border-top-color:#8b5cf6}
+
+/* Chart grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3-1{display:grid;grid-template-columns:3fr 1fr;gap:14px;margin-bottom:14px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px}
+.chart-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #eef0f8}
+.chart-card.full{margin-bottom:14px}
+.card-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bbb;margin-bottom:3px}
+.card-ttl{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:14px}
+.card-ttl-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-ttl-row .card-ttl{margin-bottom:0}
+.cw-220{position:relative;height:220px}
+.cw-200{position:relative;height:200px}
+.cw-180{position:relative;height:180px}
+.cw-160{position:relative;height:160px}
+.cw-140{position:relative;height:140px}
+.cw-280{position:relative;height:280px}
+.cw-300{position:relative;height:300px}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:12px}
+table.tbl thead th{padding:8px 12px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa;border-bottom:2px solid #eef0f8;white-space:nowrap;cursor:pointer;user-select:none}
+table.tbl thead th:hover{color:#6366f1}
+table.tbl thead th.sort-asc::after{content:" ↑";color:#6366f1}
+table.tbl thead th.sort-desc::after{content:" ↓";color:#6366f1}
+table.tbl thead th.r{text-align:right}
+table.tbl tbody td{padding:9px 12px;border-bottom:1px solid #f3f4f8;vertical-align:middle}
+table.tbl tbody td.r{text-align:right}
+table.tbl tbody tr:last-child td{border-bottom:none}
+table.tbl tbody tr:hover td{background:#fafbff}
+table.tbl tfoot td{padding:9px 12px;font-weight:700;border-top:2px solid #e0e2ef;background:#f7f8fc;font-size:12px}
+table.tbl tfoot td.r{text-align:right}
+.tbl-name{font-weight:600;color:#2a2a40;max-width:280px}
+.tbl-sub{font-size:10px;color:#999;font-weight:400;display:block;margin-top:1px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap}
+.pill-t1{background:#EEF2FF;color:#6366f1}
+.pill-t2{background:#f0fdf4;color:#16a34a}
+.pill-floor{background:#fef2f2;color:#ef4444}
+.pill-ok{background:#f0fdf4;color:#16a34a}
+.pill-finance{background:#FFF7ED;color:#c2410c}
+.pill-sales-ldr{background:#F0F9FF;color:#0369a1}
+.pill-sales-comp{background:#FFF1F2;color:#be123c}
+.pill-ops{background:#F5F3FF;color:#7c3aed}
+
+/* Budget bar mini */
+.bbar-wrap{display:flex;align-items:center;gap:8px;min-width:120px}
+.bbar-bg{flex:1;height:6px;background:#eef0f8;border-radius:3px;overflow:hidden;min-width:60px}
+.bbar-fill{height:100%;border-radius:3px;transition:width .3s}
+.bbar-val{font-size:11px;font-weight:700;color:#1a1a2e;white-space:nowrap}
+
+/* Campaign cards */
+.camp-card-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.camp-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #eef0f8;cursor:pointer;transition:all .2s;border-top:3px solid transparent}
+.camp-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,0.1)}
+.camp-card.active-c{box-shadow:0 0 0 2px currentColor}
+.camp-card-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bbb;margin-bottom:6px}
+.camp-card-val{font-size:19px;font-weight:800;color:#1a1a2e;letter-spacing:-.5px}
+.camp-card-sub{font-size:10px;color:#9497b5;margin-top:4px}
+.camp-card-bar{margin-top:10px;height:4px;border-radius:2px;background:#eef0f8;overflow:hidden}
+.camp-card-fill{height:100%;border-radius:2px}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#555}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* Ranking list */
+.rank-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f8}
+.rank-row:last-child{border-bottom:none}
+.rank-num{font-size:11px;font-weight:800;color:#ccc;width:20px;flex-shrink:0;text-align:right}
+.rank-name{flex:1;font-size:12px;font-weight:600;color:#2a2a40;min-width:0}
+.rank-name small{display:block;font-size:10px;font-weight:400;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-bar-wrap{width:120px;flex-shrink:0}
+.rank-val{font-size:12px;font-weight:700;color:#1a1a2e;width:70px;text-align:right;flex-shrink:0}
+
+/* Floor analysis */
+.floor-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;margin-bottom:6px}
+.floor-item-name{font-size:12px;font-weight:600;color:#991b1b;flex:1}
+.floor-item-sub{font-size:10px;color:#f87171;margin-top:2px}
+.floor-item-amt{text-align:right;flex-shrink:0}
+.floor-item-proj{font-size:11px;color:#f87171}
+.floor-item-final{font-size:13px;font-weight:700;color:#991b1b}
+.floor-item-diff{font-size:10px;color:#fca5a5;margin-top:1px}
+
+/* Filters */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa}
+select.flt{padding:6px 10px;font-size:11.5px;font-weight:500;border:1.5px solid #e0e2f0;border-radius:8px;background:#fff;color:#333;outline:none;cursor:pointer;font-family:inherit;transition:border-color .15s}
+select.flt:hover,select.flt:focus{border-color:#6366f1}
+.flt-count{font-size:11px;color:#9497b5;margin-left:4px}
+
+/* Stat pair */
+.stat-pair{display:flex;gap:20px;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:#1a1a2e;letter-spacing:-.5px;line-height:1}
+.stat-lbl{font-size:10px;color:#9497b5;margin-top:3px}
+
+/* Assumption row */
+.asmp-row{display:flex;align-items:center;gap:0;margin-bottom:10px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #eef0f8}
+.asmp-label{padding:12px 16px;font-size:12px;font-weight:600;color:#444;flex:1;border-right:1px solid #eef0f8}
+.asmp-val{padding:12px 16px;font-size:13px;font-weight:800;color:#6366f1;width:160px;text-align:center;border-right:1px solid #eef0f8}
+.asmp-note{padding:12px 16px;font-size:11px;color:#9497b5;flex:2}
+
+/* Donut center label */
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-center-val{font-size:18px;font-weight:800;color:#1a1a2e;letter-spacing:-.5px}
+.donut-center-lbl{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.07em;margin-top:1px}
+.donut-wrap{position:relative}
+
+/* Persona table heat cells */
+.heat-0{background:#f7f8fc;color:#bbb}
+.heat-1{background:#e0e7ff;color:#3730a3}
+.heat-2{background:#c7d2fe;color:#3730a3}
+.heat-3{background:#a5b4fc;color:#312e81}
+.heat-4{background:#818cf8;color:#fff}
+.heat-5{background:#6366f1;color:#fff}
+.ptbl-toggle.active{background:#6366f1!important;color:#fff!important;border-color:#6366f1!important}
+.persona-total-col{background:#f7f8fc;font-weight:700}
+.persona-total-row td{background:#f0f2fa!important;font-weight:700;border-top:2px solid #e0e2ef}
+
+/* Divider */
+.section-div{margin:18px 0 14px;display:flex;align-items:center;gap:10px}
+.section-div-line{flex:1;height:1px;background:#eef0f8}
+.section-div-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ccc;white-space:nowrap}
+
+/* Insight chip */
+.insight-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.insight{display:flex;align-items:flex-start;gap:8px;background:#fff;border-radius:10px;padding:10px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #eef0f8;flex:1;min-width:180px}
+.insight-icon{font-size:18px;flex-shrink:0;line-height:1.2}
+.insight-body{flex:1}
+.insight-ttl{font-size:11.5px;font-weight:700;color:#1a1a2e;margin-bottom:2px}
+.insight-txt{font-size:10.5px;color:#777;line-height:1.5}
+
+/* ── Rationale Panel ──────────────────────────────────────────────────────── */
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#6366f1;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.section-header h3{margin:0;font-size:16px;font-weight:700;color:#1a1a2e}
+.rationale-section{margin-bottom:24px}
+.formula-block{background:#eef0ff;border:1px solid #c7d2fe;border-left:4px solid #6366f1;border-radius:8px;padding:16px 20px;font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:600;color:#3730a3;margin-bottom:18px;letter-spacing:.01em}
+.decision-card{border-radius:10px;padding:18px;background:#fff;border:1px solid #eef0f8;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.decision-card.chosen{border-left:4px solid #10b981}
+.decision-card.rejected{border-left:4px solid #e11d48}
+.decision-card .dc-title{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+.decision-card .dc-sub{font-size:12px;color:#888;margin-bottom:12px}
+.decision-card ul{margin:0;padding:0;list-style:none}
+.decision-card ul li{font-size:13px;padding:4px 0;display:flex;gap:6px;align-items:flex-start;line-height:1.5}
+.pro-icon{color:#16a34a;font-weight:700;flex-shrink:0}
+.con-icon{color:#dc2626;font-weight:700;flex-shrink:0}
+.routing-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.routing-cell{border-radius:10px;padding:14px 16px;background:#fff;border:1px solid #eef0f8;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.routing-cell .rc-condition{font-size:11px;font-weight:600;color:#888;margin-bottom:6px;font-family:'Courier New',Courier,monospace;letter-spacing:.02em}
+.routing-cell .rc-outcome{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.routing-cell .rc-note{font-size:12px;color:#666;line-height:1.45}
+.intent-highlight td{background:#f5f3ff!important;font-weight:700;color:#6d28d9}
+.flow-wrap{display:flex;flex-direction:column;align-items:center;gap:0;font-size:13px}
+.flow-box{border-radius:8px;padding:10px 20px;font-weight:600;color:#fff;text-align:center;min-width:220px;max-width:320px;line-height:1.4}
+.flow-box.tam{background:#6366f1}
+.flow-box.exclude{background:#e11d48}
+.flow-box.decision{background:#f59e0b;color:#1a1a2e}
+.flow-box.intent{background:#8b5cf6}
+.flow-box.cold{background:#0891b2}
+.flow-box.signal{background:#10b981}
+.flow-arrow{font-size:20px;color:#888;line-height:1.2;margin:2px 0}
+.tbl-note{font-size:12px;color:#888;margin-top:8px;font-style:italic}
+.intent-card{border-radius:10px;padding:18px;background:#fff;border:1px solid #eef0f8;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.intent-card .ic-title{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.intent-card ul{margin:0;padding-left:16px}
+.intent-card ul li{font-size:13px;color:#444;line-height:1.6;margin-bottom:4px}
+.adset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.adset-campaign{border-radius:10px;overflow:hidden;border:1px solid #eef0f8;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.adset-campaign-header{padding:8px 12px;font-size:12px;font-weight:700;color:#fff;letter-spacing:.02em}
+.adset-campaign-body{background:#fff;padding:10px 12px}
+.adset-row{font-size:12px;color:#444;padding:3px 0;border-bottom:1px solid #f3f4f6;line-height:1.4}
+.adset-row:last-child{border-bottom:none}
+
+/* ── Model Toggle ── */
+.model-toggle{display:flex;background:#f0f2fa;border-radius:8px;padding:3px;gap:2px}
+.model-btn{padding:5px 16px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;color:#6b7280;background:transparent;letter-spacing:.02em}
+.model-btn.active{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.model-btn.m2.active{background:#0ea5e9;color:#fff}
+
+/* ── Cut Cards ── */
+.cut-summary-banner{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:14px;padding:22px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.cut-banner-left h2{font-size:18px;font-weight:800;color:#fff;margin:0 0 4px;letter-spacing:-.3px}
+.cut-banner-left p{font-size:12px;color:#94a3b8;margin:0}
+.cut-banner-stats{display:flex;gap:28px;flex-shrink:0}
+.cut-banner-stat{text-align:center}
+.cut-banner-stat .val{font-size:20px;font-weight:800;color:#38bdf8;letter-spacing:-.5px}
+.cut-banner-stat .val.green{color:#34d399}
+.cut-banner-stat .val.amber{color:#fbbf24}
+.cut-banner-stat .lbl{font-size:9.5px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+.cut-banner-divider{width:1px;background:rgba(255,255,255,0.08);height:40px;align-self:center}
+
+.cuts-list{display:flex;flex-direction:column;gap:12px}
+.cut-card{background:#fff;border-radius:12px;border:1px solid #eef0f8;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
+.cut-card-header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f8}
+.cut-num{width:30px;height:30px;border-radius:8px;background:#1e293b;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cut-title{font-size:13.5px;font-weight:700;color:#1a1a2e;flex:1;line-height:1.3}
+.cut-saving-badge{background:#dcfce7;color:#15803d;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.cut-budget-after{font-size:11px;color:#9497b5;white-space:nowrap}
+.cut-card-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.cut-what{padding:14px 20px;border-right:1px solid #f3f4f8}
+.cut-what-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bbb;margin-bottom:8px}
+.cut-what p{font-size:12.5px;color:#444;line-height:1.65;margin:0}
+.cut-why{padding:14px 20px;background:#f0fdf4}
+.cut-why-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#16a34a;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.cut-why p{font-size:12.5px;color:#374151;line-height:1.65;margin:0}
+.cut-stat{display:inline-block;background:#dcfce7;color:#15803d;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;margin:5px 0 3px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">Li</div>
+      <div>
+        <div class="sb-title">Budget Dashboard</div>
+      </div>
+    </div>
+    <div class="sb-sub">All Campaigns · May 2026<br>66 Ad Sets · $212.7K/mo</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-lbl">Overview</div>
+    <button class="nav-item active" data-tab="exec"><span class="nav-dot" style="background:#6366f1"></span>Exec Summary</button>
+    <button class="nav-item" data-tab="rationale"><span class="nav-dot" style="background:#0ea5e9"></span>Architecture Rationale</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-lbl">By Campaign</div>
+    <button class="nav-item" data-tab="software"><span class="nav-dot" style="background:#6366f1"></span>Software</button>
+    <button class="nav-item" data-tab="mfg"><span class="nav-dot" style="background:#10b981"></span>Manufacturing</button>
+    <button class="nav-item" data-tab="finserv"><span class="nav-dot" style="background:#f59e0b"></span>Financial Services</button>
+    <button class="nav-item" data-tab="other"><span class="nav-dot" style="background:#8b5cf6"></span>Other Industries</button>
+    <button class="nav-item" data-tab="xactly"><span class="nav-dot" style="background:#e11d48"></span>Xactly Displacement</button>
+    <button class="nav-item" data-tab="ainative"><span class="nav-dot" style="background:#06b6d4"></span>AI Native</button>
+    <button class="nav-item" data-tab="signal"><span class="nav-dot" style="background:#0891b2"></span>Signal Campaigns</button>
+    <button class="nav-item" data-tab="intent"><span class="nav-dot" style="background:#7c3aed"></span>Intent Campaigns</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-lbl">Analysis</div>
+    <button class="nav-item" data-tab="adsets"><span class="nav-dot" style="background:#f97316"></span>All Ad Sets</button>
+    <button class="nav-item" data-tab="assumptions"><span class="nav-dot" style="background:#94a3b8"></span>Assumptions</button>
+  </div>
+
+  <div class="sb-footer">
+    <div class="sb-badge">CPM $65 · T1: 60%/12× · T2: 30%/8×<br>Bound: 60%/12× · Floor $620</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-title">Exec Summary</div>
+      <div class="page-sub">LinkedIn Ads — Budget Model (Cold + Bound)</div>
+    </div>
+    <div class="topbar-right">
+      <div class="model-toggle">
+        <button class="model-btn m1 active" onclick="setModel(1)">M1: True Bottom-Up</button>
+        <button class="model-btn m2" onclick="setModel(2)">M2: Adjusted</button>
+      </div>
+      <span class="tag tag-blue">All Campaigns</span>
+      <span class="tag tag-green">May 2026</span>
+    </div>
+  </div>
+
+  <div class="panel-area">
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: EXEC SUMMARY
+    ═══════════════════════════════════════════════════════ -->
+    <div class="panel active" id="panel-exec">
+      <div class="kpi-row">
+        <div class="kpi-card kpi-accent kpi-accent-blue">
+          <div class="kpi-lbl"><span class="kpi-icon">💰</span>Monthly Budget</div>
+          <div class="kpi-val">$212,725</div>
+          <div class="kpi-sub">Across 8 campaigns</div>
+        </div>
+        <div class="kpi-card kpi-accent kpi-accent-green">
+          <div class="kpi-lbl"><span class="kpi-icon">📅</span>Annual Budget</div>
+          <div class="kpi-val">$2.55M</div>
+          <div class="kpi-sub">Full-year projection</div>
+        </div>
+        <div class="kpi-card kpi-accent kpi-accent-purple">
+          <div class="kpi-lbl"><span class="kpi-icon">📋</span>Total Ad Sets</div>
+          <div class="kpi-val">66</div>
+          <div class="kpi-sub">Across 8 campaigns</div>
+        </div>
+        <div class="kpi-card kpi-accent kpi-accent-red">
+          <div class="kpi-lbl"><span class="kpi-icon">⚠️</span>Floor-Hit Ad Sets</div>
+          <div class="kpi-val">27</div>
+          <div class="kpi-sub">40.9% of all ad sets</div>
+        </div>
+      </div>
+
+      <!-- Analytics tables row 1 -->
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="chart-card">
+          <div class="card-lbl">Budget Framework</div>
+          <div class="card-ttl">Demand Creation vs Demand Capture</div>
+          <div class="tbl-wrap" id="demand-split-tbl"></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-lbl">Tier Breakdown</div>
+          <div class="card-ttl">Budget by Layer &amp; Tier</div>
+          <div class="tbl-wrap" id="tier-split-tbl"></div>
+        </div>
+      </div>
+
+
+      <div class="chart-card full">
+        <div class="card-lbl">Campaign Summary</div>
+        <div class="card-ttl">Budget, Ad Sets &amp; Audience by Campaign</div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="camp-summary-tbl"></table>
+        </div>
+      </div>
+
+    </div><!-- /exec -->
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: BUDGET RATIONALE
+    ═══════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-rationale">
+
+      <!-- SECTION 1: Building the TAM -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">1</span>
+            <h3>Building the TAM</h3>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:center;margin-bottom:20px;">
+            <div style="background:#eef0ff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 16px;">
+              <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Raw Universe</div>
+              <div style="font-size:22px;font-weight:800;color:#1a1a2e;">939,865</div>
+              <div style="font-size:12px;color:#888;margin-top:2px;">contact rows exported from HubSpot</div>
+              <div style="margin-top:8px;font-size:22px;font-weight:800;color:#1a1a2e;">48,647</div>
+              <div style="font-size:12px;color:#888;">unique companies</div>
+            </div>
+            <div style="font-size:24px;color:#6366f1;padding:0 12px;">→</div>
+            <div style="background:#fef9ee;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
+              <div style="font-size:11px;font-weight:600;color:#d97706;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Filters Applied</div>
+              <div style="font-size:13px;color:#444;line-height:1.6;">
+                <div style="margin-bottom:6px;"><span style="font-weight:600;color:#1a1a2e;">Exclude bound companies</span><br><span style="color:#888;">Xactly: 239 &nbsp;|&nbsp; AI Native: 335</span></div>
+                <div style="margin-bottom:6px;"><span style="font-weight:600;color:#1a1a2e;">ABM Persona Group</span><br><span style="color:#888;">Finance, Sales Leadership, Sales Comp, Ops</span></div>
+                <div><span style="font-weight:600;color:#1a1a2e;">Seniority Level</span><br><span style="color:#888;">Leadership (VP, Director, CXO)</span><br><span style="color:#888;">Champions (Manager, IC/Staff)</span></div>
+              </div>
+            </div>
+            <div style="font-size:24px;color:#6366f1;padding:0 12px;">→</div>
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;">
+              <div style="font-size:11px;font-weight:600;color:#16a34a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Final Cold TAM</div>
+              <div style="font-size:22px;font-weight:800;color:#1a1a2e;">48,073</div>
+              <div style="font-size:12px;color:#888;margin-top:2px;">companies</div>
+              <div style="margin-top:8px;font-size:22px;font-weight:800;color:#1a1a2e;">529,598</div>
+              <div style="font-size:12px;color:#888;margin-top:2px;">contacts</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:#888;margin:0;">Source: HubSpot custom report export (May 2026). Unique company deduplication applied on company domain field.</p>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Campaign Architecture Decision -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">2</span>
+            <h3>Campaign Architecture Decision — Vertical vs Theme-based</h3>
+          </div>
+          <div class="grid-2">
+            <div class="decision-card chosen">
+              <div class="dc-title">✅ Chosen: Vertical / Industry Structure</div>
+              <div class="dc-sub">Software · Manufacturing · Financial Services · Other Industries</div>
+              <ul>
+                <li><span class="pro-icon">✓</span> Zero audience overlap → no LinkedIn auction self-competition</li>
+                <li><span class="pro-icon">✓</span> Clear budget accountability per industry vertical</li>
+                <li><span class="pro-icon">✓</span> Theme creatives can still be rotated within each vertical campaign — achieving both theme-level and industry-level personalisation without structural complexity</li>
+                <li><span class="pro-icon">✓</span> Clean A/B testing and pipeline attribution per vertical</li>
+                <li><span class="pro-icon">✓</span> Easy CPM benchmarking — compare performance across verticals with clean, non-overlapping audiences</li>
+                <li><span class="pro-icon">✓</span> LinkedIn best practice for enterprise B2B campaigns</li>
+              </ul>
+            </div>
+            <div class="decision-card rejected">
+              <div class="dc-title">✗ Alternative: Theme-based Structure <span style="font-size:11px;font-weight:400;color:#888;">(not chosen)</span></div>
+              <div class="dc-sub">Spreadsheet replacement · Mid-year comp cycle · Annual planning · etc.</div>
+              <ul>
+                <li><span class="con-icon">✗</span> Same company appears in multiple theme campaigns → LinkedIn self-competition → +15–30% CPM inflation</li>
+                <li><span class="con-icon">✗</span> Themes overlap across personas — every Finance contact is both a spreadsheet user and a mid-year comp planner</li>
+                <li><span class="con-icon">✗</span> Harder to budget bottom-up — theme audience sizes are fluid and overlap, making reliable spend forecasting difficult</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2b: Theme-level Personalisation under Vertical Structure -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge" style="background:#10b981;">↳</span>
+            <h3>How We Solve for Theme-level Personalisation</h3>
+          </div>
+          <p style="font-size:13px;color:#444;margin:0 0 16px;">Themes are a <strong>messaging and creative layer</strong>, not a structural one. The campaign architecture is built around audience segments (vertical × persona × seniority). Themes are layered on top through creative rotation inside each ad set — no new campaigns, no audience fragmentation, no CPM inflation.</p>
+
+          <!-- Theme classification -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+            <div style="background:#eef0ff;border:1px solid #c7d2fe;border-left:4px solid #6366f1;border-radius:10px;padding:16px 18px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="background:#6366f1;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;">EVERGREEN</span>
+                <div style="font-size:14px;font-weight:700;color:#1a1a2e;">Spreadsheet Replacement</div>
+              </div>
+              <div style="font-size:13px;color:#444;line-height:1.7;">Always-on. Umbrella theme that covers all sub-angles — rep experience, commission visibility, planning accuracy, payout errors. Runs year-round in all Finance and Ops persona ad sets across every vertical. This is the baseline creative layer the campaign never turns off.</div>
+            </div>
+            <div style="background:#fef9ee;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:16px 18px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="background:#f59e0b;color:#1a1a2e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;">SEASONAL</span>
+                <div style="font-size:14px;font-weight:700;color:#1a1a2e;">Mid-Year Comp Cycle</div>
+              </div>
+              <div style="font-size:13px;color:#444;line-height:1.7;">Time-bound. Runs April – July when H1 closes, comp reviews are live, and sales reps are questioning their numbers. Targets Finance and Sales persona ad sets. Layered on top of spreadsheet creatives during the season — does not replace them.</div>
+            </div>
+          </div>
+
+          <!-- Delivery mechanism -->
+          <div style="background:#f8faff;border:1px solid #e0e2f0;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Delivery Mechanism — Rotate Evenly</div>
+            <p style="font-size:13px;color:#444;line-height:1.7;margin:0 0 12px;">LinkedIn's default delivery optimises toward the best-performing creative by CTR — which would progressively suppress mid-year comp creatives outside their seasonal peak and distort performance reads. Instead, set all ad sets to <strong>Rotate Evenly</strong>. This distributes impressions equally across all active creatives, giving each theme proportional airtime regardless of early CTR signals.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="background:#fff;border:1px solid #e0e2f0;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Non-Season (Aug – Mar)</div>
+                <div style="font-size:13px;color:#444;line-height:1.6;">Spreadsheet creatives only. Full <strong>12× frequency</strong> behind a single message. LinkedIn has one narrative to reinforce — maximum depth.</div>
+              </div>
+              <div style="background:#fff;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:700;color:#b45309;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Mid-Year Season (Apr – Jul)</div>
+                <div style="font-size:13px;color:#444;line-height:1.6;">Spreadsheet + Mid-Year Comp creatives active. Each theme gets <strong>~6× frequency</strong>. Neither campaign is compromised — both narratives run in parallel to the same audience.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Frequency trade-off and budget lever -->
+          <div style="background:#fff8f1;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Managing the Frequency Split</div>
+            <p style="font-size:13px;color:#444;line-height:1.7;margin:0;">Running two themes in parallel splits the 12× monthly frequency to ~6× per theme. If 6× feels thin during the mid-year peak — when the message has strong temporal urgency — the lever is a <strong>temporary budget increase</strong> to restore effective frequency. No structural changes. Scale back to baseline from August onward when spreadsheet runs alone again.</p>
+          </div>
+
+          <!-- What not to do -->
+          <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:#be123c;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">What Not To Do</div>
+            <p style="font-size:13px;color:#444;line-height:1.7;margin:0;">Do not create separate ad sets per theme within the same campaign. Two Finance × Leadership ad sets targeting identical audiences within the same campaign will compete against each other in LinkedIn's internal auction — recreating the self-competition problem the vertical structure was designed to prevent, just moved inside the campaign instead of between campaigns.</p>
+          </div>
+
+          <!-- 3-axis matrix -->
+          <div style="background:#f8faff;border:1px solid #e0e2f0;border-radius:10px;padding:14px 18px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+            <div style="font-size:12px;color:#555;flex:1;min-width:200px;">
+              <strong style="color:#1a1a2e;">The rule:</strong> Industry = campaign. Persona = ad set. Theme = creative. This gives a 3-axis personalisation matrix with zero structural overhead — the entire theme layer is managed through creative trafficking alone.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div style="background:#fff;border:1px solid #e0e2f0;border-radius:8px;padding:8px 12px;font-size:11px;text-align:center;"><div style="font-weight:700;color:#6366f1;font-size:13px;">Industry</div><div style="color:#888;">Campaign</div></div>
+              <div style="font-size:18px;color:#bbb;align-self:center;">×</div>
+              <div style="background:#fff;border:1px solid #e0e2f0;border-radius:8px;padding:8px 12px;font-size:11px;text-align:center;"><div style="font-weight:700;color:#8b5cf6;font-size:13px;">Persona</div><div style="color:#888;">Ad Set</div></div>
+              <div style="font-size:18px;color:#bbb;align-self:center;">×</div>
+              <div style="background:#fff;border:1px solid #e0e2f0;border-radius:8px;padding:8px 12px;font-size:11px;text-align:center;"><div style="font-weight:700;color:#10b981;font-size:13px;">Theme</div><div style="color:#888;">Creative</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2c: Bound / Defined TAM Campaigns -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge" style="background:#e11d48;">↳</span>
+            <h3>Bound Campaigns — Why a Defined TAM Deserves Its Own Campaign</h3>
+          </div>
+          <p style="font-size:13px;color:#444;margin:0 0 18px;">Two campaigns — Xactly Displacement and AI Native — operate on a <strong>closed, pre-defined company list</strong> rather than the open cold TAM. They are excluded from cold campaigns entirely and run as standalone campaigns with their own budget, creative, and parameters.</p>
+          <div style="padding:12px 16px;background:#f8faff;border:1px solid #e0e2f0;border-radius:8px;font-size:12px;color:#555;">
+            <strong style="color:#1a1a2e;">Why exclude from cold?</strong> &nbsp;Mixing these accounts into cold vertical campaigns forces creative compromise — the ad that works for a Xactly customer or an AI-native startup is fundamentally different from what works for a cold Software or Manufacturing prospect. Separate campaigns preserve creative intent, allow dedicated budget control, and prevent high-value accounts from being under-served by generic messaging.
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Account & Contact Universe -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">3</span>
+            <h3>Account &amp; Contact Universe by Campaign</h3>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr>
+                <th>Campaign</th>
+                <th class="r">Accounts</th>
+                <th class="r">Contacts</th>
+                <th class="r">Contacts / Acct</th>
+                <th>Notes</th>
+              </tr></thead>
+              <tbody>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#6366f1;margin-right:6px;vertical-align:middle;"></span><strong>Software</strong></td><td class="r">7,851</td><td class="r">82,996</td><td class="r">10.6×</td><td style="color:#888;font-size:12px;">Excl. 574 bound companies</td></tr>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#10b981;margin-right:6px;vertical-align:middle;"></span><strong>Manufacturing</strong></td><td class="r">13,713</td><td class="r">161,182</td><td class="r">11.8×</td><td style="color:#888;font-size:12px;">—</td></tr>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;margin-right:6px;vertical-align:middle;"></span><strong>Financial Services</strong></td><td class="r">2,349</td><td class="r">61,527</td><td class="r">26.2×</td><td style="color:#888;font-size:12px;">High density — large FS enterprises</td></tr>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#8b5cf6;margin-right:6px;vertical-align:middle;"></span><strong>Other Industries</strong></td><td class="r">21,267</td><td class="r">223,893</td><td class="r">10.5×</td><td style="color:#888;font-size:12px;">Largest cold audience</td></tr>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e11d48;margin-right:6px;vertical-align:middle;"></span><strong>Xactly Displacement</strong></td><td class="r">239</td><td class="r">9,808</td><td class="r">41.0×</td><td style="color:#888;font-size:12px;">Bound list — all contacts included</td></tr>
+                <tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#06b6d4;margin-right:6px;vertical-align:middle;"></span><strong>AI Native</strong></td><td class="r">335</td><td class="r">1,254</td><td class="r">3.7×</td><td style="color:#888;font-size:12px;">Bound list — sales leadership focus</td></tr>
+                <tr style="background:#ecfeff;"><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#0891b2;margin-right:6px;vertical-align:middle;"></span><strong>Signal (overlay)</strong></td><td class="r">254</td><td class="r">16,350</td><td class="r">64.4×</td><td style="color:#888;font-size:12px;">Companies showing active hiring signals</td></tr>
+                <tr style="background:#f5f3ff;"><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c3aed;margin-right:6px;vertical-align:middle;"></span><strong>Intent (in-market)</strong></td><td class="r">288</td><td class="r">26,014</td><td class="r">90.3×</td><td style="color:#888;font-size:12px;">Score &gt; 21 — removed from cold</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="tbl-note">Signal and Intent audiences overlap with cold campaigns and each other — they are not additive to the total company count.</p>
+        </div>
+      </div>
+
+      <!-- SECTION 4: Budget Formula -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">4</span>
+            <h3>Budget Formula &amp; Assumptions</h3>
+          </div>
+          <div class="formula-block">Monthly Budget = ( Audience × Penetration% × Frequency × CPM ) ÷ 1,000</div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr>
+                <th>Variable</th>
+                <th class="r">Tier 1</th>
+                <th class="r">Tier 2</th>
+                <th class="r">Bound / Intent / Signal</th>
+                <th>Rationale</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>CPM</strong></td>
+                  <td class="r">$65</td><td class="r">$65</td><td class="r">$65</td>
+                  <td style="font-size:12px;color:#666;">LinkedIn B2B senior audience benchmark; Finance, Ops, and Sales personas command a premium over general B2B rates</td>
+                </tr>
+                <tr>
+                  <td><strong>Penetration</strong></td>
+                  <td class="r"><span class="pill pill-ok" style="font-size:11px;">60%</span></td>
+                  <td class="r"><span class="pill pill-floor" style="font-size:11px;">30%</span></td>
+                  <td class="r"><span class="pill pill-ok" style="font-size:11px;">60%</span></td>
+                  <td style="font-size:12px;color:#666;">% of matched audience LinkedIn can realistically reach per month. T1 = high-fit accounts worth deeper saturation; T2 = lighter touch to reduce waste</td>
+                </tr>
+                <tr>
+                  <td><strong>Frequency</strong></td>
+                  <td class="r"><span class="pill pill-ok" style="font-size:11px;">12×/mo</span></td>
+                  <td class="r"><span class="pill pill-floor" style="font-size:11px;">8×/mo</span></td>
+                  <td class="r"><span class="pill pill-ok" style="font-size:11px;">12×/mo</span></td>
+                  <td style="font-size:12px;color:#666;">Impressions per person per month. B2B awareness research requires 7–12× to register; T1 gets upper end of the range</td>
+                </tr>
+                <tr>
+                  <td><strong>Floor</strong></td>
+                  <td class="r">$620/mo</td><td class="r">$620/mo</td><td class="r">$620/mo</td>
+                  <td style="font-size:12px;color:#666;">LinkedIn minimum for consistent ad delivery — below this threshold, pacing becomes erratic and frequency targets cannot be met</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="tbl-note">T1 vs T2 split sourced from <code style="font-size:11px;">account_tier</code> field in HubSpot. Tier 1 = top-fit accounts by ICP score; Tier 2 = secondary fit.</p>
+        </div>
+      </div>
+
+      <!-- SECTION 5: Intent Campaign Structure -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">5</span>
+            <h3>Intent Campaign Structure</h3>
+          </div>
+          <p style="font-size:13px;color:#444;margin:0 0 18px;">Intent score is a <strong>composite signal</strong> built from: G2 review/view activity, LinkedIn profile &amp; post engagement, website retargeting signals, HubSpot pipeline stage data, and Bombora third-party intent feeds.</p>
+          <div class="grid-2">
+            <div class="intent-card">
+              <div class="ic-title">Score Band Distribution</div>
+              <div class="tbl-wrap">
+                <table class="tbl">
+                  <thead><tr>
+                    <th>Band</th>
+                    <th class="r">Companies</th>
+                    <th class="r">% of Intent Universe</th>
+                    <th>Treatment</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr><td>0 (no intent)</td><td class="r">~45,820</td><td class="r">—</td><td style="color:#888;font-size:12px;">Cold only</td></tr>
+                    <tr><td>1 – 20</td><td class="r">2,516</td><td class="r">89.0%</td><td style="color:#888;font-size:12px;">Cold (remain)</td></tr>
+                    <tr><td>21 – 50</td><td class="r">279</td><td class="r">9.9%</td><td style="color:#7c3aed;font-size:12px;font-weight:600;">→ Intent campaigns</td></tr>
+                    <tr><td>51 – 75</td><td class="r">27</td><td class="r">1.0%</td><td style="color:#7c3aed;font-size:12px;font-weight:600;">→ Intent campaigns</td></tr>
+                    <tr><td>76 – 100</td><td class="r">5</td><td class="r">0.1%</td><td style="color:#7c3aed;font-size:12px;font-weight:600;">→ Intent campaigns</td></tr>
+                    <tr class="intent-highlight"><td><strong>&gt; 21 total (P90)</strong></td><td class="r"><strong>311</strong></td><td class="r"><strong>11.0%</strong></td><td style="font-size:12px;"><strong>Removed from cold</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="intent-card">
+              <div class="ic-title">Why P90 — Score &gt; 21?</div>
+              <ul>
+                <li><strong>P90 = top 10%</strong> of companies showing any intent signal in the TAM</li>
+                <li>Below 21 = ambient / passive research behaviour — not enough signal to warrant dedicated in-market creative and separate budget</li>
+                <li>Above 21 = active evaluation behaviour — multiple correlated signals, recurring website visits, peer review activity on G2</li>
+                <li>311 companies at 90.3 avg contacts/company → <strong>$12,487/mo</strong> at same CPM parameters as Tier 1</li>
+                <li>Threshold validated by contact density: intent accounts average 90× vs 12× for cold — these are larger, more active enterprises already deep in evaluation</li>
+                <li>In-market total (Intent + Signal) = <strong>9.5% of budget</strong> — within the 20–30% warm budget guideline with room to scale</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 6: Signal Campaign Layering -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">6</span>
+            <h3>Signal Campaign Layering</h3>
+          </div>
+          <p style="font-size:13px;color:#444;margin:0 0 18px;">Openfunnel signals are free-text timeline events (hiring posts, headcount announcements) classified by regex rules into 4 signal types. Signal campaigns are <strong>overlays</strong> — they do not replace cold campaigns, they add intent-relevant frequency to companies already in a hiring or growth motion.</p>
+          <div style="margin-bottom:24px;">
+            <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:10px;">Signal Ad Sets</div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Ad Set</th><th>Signal Type</th><th class="r">Contacts</th><th class="r">Budget / mo</th>
+                </tr></thead>
+                <tbody>
+                  <tr><td><strong>Sales Headcount Growth</strong></td><td style="color:#888;font-size:12px;">Headcount growth announcements</td><td class="r">8,154</td><td class="r"><strong>$3,816</strong></td></tr>
+                  <tr><td><strong>Sales Comp / ICM Hiring</strong></td><td style="color:#888;font-size:12px;">Comp/ICM-specific job description keywords</td><td class="r">5,419</td><td class="r"><strong>$2,536</strong></td></tr>
+                  <tr><td><strong>Sales Leadership Hiring</strong></td><td style="color:#888;font-size:12px;">VP/Director Sales job posting keywords</td><td class="r">1,322</td><td class="r"><strong>$620</strong></td></tr>
+                  <tr><td><strong>GTM / RevOps Hiring</strong></td><td style="color:#888;font-size:12px;">GTM/RevOps/CRO job description keywords</td><td class="r">1,455</td><td class="r"><strong>$681</strong></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Routing Matrix</div>
+            <div style="font-size:12px;color:#888;margin-bottom:12px;">How a company is assigned campaigns based on its Intent score and Signal presence</div>
+            <div class="routing-grid">
+              <div class="routing-cell" style="border-left:3px solid #7c3aed;">
+                <div class="rc-condition">Intent &gt; 21  AND  Signal &gt; 0</div>
+                <div class="rc-outcome" style="color:#7c3aed;">Intent + Signal</div>
+                <div class="rc-note">Both campaigns run in parallel. Company receives in-market creative + signal-triggered creative. Highest-frequency exposure. CPM premium justified by dense, highly active contacts.</div>
+              </div>
+              <div class="routing-cell" style="border-left:3px solid #8b5cf6;">
+                <div class="rc-condition">Intent &gt; 21  AND  Signal = 0</div>
+                <div class="rc-outcome" style="color:#8b5cf6;">Intent only</div>
+                <div class="rc-note">Removed from cold campaigns entirely. Receives in-market creative only. No hiring motion detected — message focuses on evaluation-stage content and competitive differentiation.</div>
+              </div>
+              <div class="routing-cell" style="border-left:3px solid #10b981;">
+                <div class="rc-condition">Intent ≤ 21  AND  Signal &gt; 0</div>
+                <div class="rc-outcome" style="color:#10b981;">Cold + Signal</div>
+                <div class="rc-note">Stays in cold vertical campaign and also receives signal overlay. Audiences are the same company contacts, so no LinkedIn auction self-competition. Signal ad set adds contextual frequency.</div>
+              </div>
+              <div class="routing-cell" style="border-left:3px solid #0891b2;">
+                <div class="rc-condition">Intent ≤ 21  AND  Signal = 0</div>
+                <div class="rc-outcome" style="color:#0891b2;">Cold only</div>
+                <div class="rc-note">Standard cold vertical campaign. No overlay. Reaches full audience at T1/T2 penetration and frequency parameters. Represents the majority of the TAM.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 7: Overall Architecture Flowchart -->
+      <div class="rationale-section">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge">7</span>
+            <h3>Overall Campaign Architecture</h3>
+          </div>
+
+          <!-- ── Routing flow (full-width, compact horizontal layout) ── -->
+          <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:16px;">Company Routing Logic</div>
+
+          <!-- Row 1: TAM → exclude → cold split -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;margin-bottom:0;">
+            <div style="background:#6366f1;color:#fff;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:600;text-align:center;white-space:nowrap;">48,647 ICP Companies</div>
+            <div style="font-size:18px;color:#bbb;padding:0 10px;">→</div>
+            <div style="background:#e11d48;color:#fff;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:600;text-align:center;white-space:nowrap;">Remove 574 Bound<br><span style="font-weight:400;font-size:11px;">Xactly 239 + AI Native 335</span></div>
+            <div style="font-size:18px;color:#bbb;padding:0 10px;">→</div>
+            <div style="background:#f59e0b;color:#1a1a2e;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">Intent Score &gt; 21?</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;padding:0 0 0 10px;gap:6px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:11px;font-weight:700;color:#7c3aed;white-space:nowrap;">YES → 311 cos</div>
+                <div style="font-size:18px;color:#bbb;">→</div>
+                <div style="background:#f59e0b;color:#1a1a2e;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;">Has Signal?</div>
+                <div style="font-size:18px;color:#bbb;">→</div>
+                <div style="display:flex;gap:6px;">
+                  <div style="background:#7c3aed;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;">YES<br>Intent + Signal</div>
+                  <div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;">NO<br>Intent only</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:11px;font-weight:700;color:#0891b2;white-space:nowrap;">NO → 48,073 cos</div>
+                <div style="font-size:18px;color:#bbb;">→</div>
+                <div style="background:#f59e0b;color:#1a1a2e;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;">Has Signal?</div>
+                <div style="font-size:18px;color:#bbb;">→</div>
+                <div style="display:flex;gap:6px;">
+                  <div style="background:#10b981;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;">YES<br>Cold + Signal</div>
+                  <div style="background:#0891b2;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;">NO<br>Cold only</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bound note + 4-outcome legend -->
+          <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;align-items:stretch;">
+            <div style="flex:1;min-width:240px;padding:12px 14px;background:#fff8f1;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#92400e;">
+              <strong>Bound campaigns (Xactly + AI Native)</strong> run separately — dedicated creative, budget, and frequency. Not part of the routing logic above.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#7c3aed;"></span>Intent + Signal</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#8b5cf6;"></span>Intent only</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#10b981;"></span>Cold + Signal</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#0891b2;"></span>Cold only</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e11d48;"></span>Bound</div>
+            </div>
+          </div>
+
+          <!-- ── Ad set structure (full width, 4-col grid for 8 campaigns) ── -->
+          <div style="margin-top:28px;padding-top:20px;border-top:1px solid #eef0f8;">
+            <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px;">Ad Set Structure per Campaign</div>
+            <p style="font-size:12px;color:#888;margin:0 0 14px;">Each campaign breaks into ad sets by <strong>Persona × Seniority</strong>, enabling bid-level control and creative rotation per segment. Signal and Intent campaigns inherit the same structure as the cold vertical they overlay.</p>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#6366f1;">Software</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Leadership × Champions</div>
+                  <div class="adset-row">Sales Comp × Leadership</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                  <div class="adset-row">Ops × Champions</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#10b981;">Manufacturing</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Leadership × Champions</div>
+                  <div class="adset-row">Sales Comp × Leadership</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                  <div class="adset-row">Ops × Champions</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#f59e0b;color:#1a1a2e;">Financial Services</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Leadership × Champions</div>
+                  <div class="adset-row">Sales Comp × Leadership</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                  <div class="adset-row">Ops × Champions</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#8b5cf6;">Other Industries</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Leadership × Champions</div>
+                  <div class="adset-row">Sales Comp × Leadership</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                  <div class="adset-row">Ops × Champions</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#e11d48;">Xactly Displacement</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Comp × Leadership</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#06b6d4;">AI Native</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Sales Leadership × Leadership</div>
+                  <div class="adset-row">Sales Leadership × Champions</div>
+                  <div class="adset-row">Finance × Leadership</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#0891b2;">Signal Campaigns</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Sales Headcount Growth</div>
+                  <div class="adset-row">Sales Comp / ICM Hiring</div>
+                  <div class="adset-row">Sales Leadership Hiring</div>
+                  <div class="adset-row">GTM / RevOps Hiring</div>
+                </div>
+              </div>
+              <div class="adset-campaign">
+                <div class="adset-campaign-header" style="background:#7c3aed;">Intent Campaigns</div>
+                <div class="adset-campaign-body">
+                  <div class="adset-row">Finance × Leadership</div>
+                  <div class="adset-row">Finance × Champions</div>
+                  <div class="adset-row">Ops × Leadership</div>
+                  <div class="adset-row">Ops × Champions</div>
+                  <div class="adset-row">Sales Comp × All Seniority</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 8: Budget Reduction Model -->
+      <div class="rationale-section" style="margin-top:14px">
+        <div class="chart-card full">
+          <div class="section-header">
+            <span class="step-badge" style="background:#0ea5e9">M2</span>
+            <h3>Model 2: Adjusted &amp; Refined Budget</h3>
+          </div>
+          <!-- M2 banner -->
+          <div class="cut-summary-banner" style="margin-bottom:18px">
+            <div class="cut-banner-left">
+              <h2>Model 2: Adjusted &amp; Refined Budget</h2>
+              <p>6 structural cuts applied to the true bottom-up model — each defensible, none compromising core TAM coverage</p>
+            </div>
+            <div class="cut-banner-stats">
+              <div class="cut-banner-stat"><div class="val">$70,534</div><div class="lbl">Monthly Budget</div></div>
+              <div class="cut-banner-divider"></div>
+              <div class="cut-banner-stat"><div class="val green">$142,191</div><div class="lbl">Monthly Savings</div></div>
+              <div class="cut-banner-divider"></div>
+              <div class="cut-banner-stat"><div class="val amber">66.8%</div><div class="lbl">Budget Reduction</div></div>
+              <div class="cut-banner-divider"></div>
+              <div class="cut-banner-stat"><div class="val">37</div><div class="lbl">Ad Sets Remaining</div></div>
+            </div>
+          </div>
+          <!-- Cut cards -->
+          <div class="cuts-list">
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">1</div><div class="cut-title">Drop Sales Leadership persona from 4 cold verticals</div><span class="cut-saving-badge">− $34,453 / mo</span><span class="cut-budget-after">Budget after: $178,272</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Removed all T1 Sales Leadership ad sets (both Leadership and Champions seniority) from Software, Manufacturing, Financial Services, and Other Industries cold campaigns.</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why this is defensible</div><p>Sales Leadership contacts are not left uncovered — they receive dedicated, higher-intent exposure via the Xactly Displacement campaign and Signal campaigns triggered by active hiring activity. Cold vertical Sales Leadership ad sets were creating LinkedIn auction self-competition, inflating CPMs on contacts these specialist campaigns already reach.</p></div></div></div>
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">2</div><div class="cut-title">Drop all T2 ad sets</div><span class="cut-saving-badge">− $23,675 / mo</span><span class="cut-budget-after">Budget after: $154,597</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Removed all 22 T2-tier ad sets across Software, Manufacturing, Financial Services, and Other Industries. T2 accounts (10,284 companies) are smaller organisations typically below the ACV sweet spot for a complex ICM deployment.</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why this is defensible</div><div class="cut-stat">78% of cold TAM by company count still covered</div><p>After removing T2, we still serve 38,283 T1 companies — 78% of the addressable cold universe. T1 contacts are denser (avg 13.8 contacts/company vs T2's 9.7), stronger ICM processes, higher ACV ceiling. T2 can be reactivated once T1 pipeline matures.</p></div></div></div>
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">3</div><div class="cut-title">LinkedIn Member Skills filter (AND condition) on top 3 Finance T1 ad sets</div><span class="cut-saving-badge">− $56,421 / mo</span><span class="cut-budget-after">Budget after: $98,176</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Added Member Skills (Sales Compensation, Commission Management, Incentive Compensation, Variable Pay) as AND conditions to Other Industries Finance Champions (90,427→27,128), Manufacturing Finance Champions (55,390→16,617), and Other Industries Finance Leadership (26,405→7,922). ~30% audience retention.</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why this is defensible</div><div class="cut-stat">51,667 skills-verified contacts remain across 3 ad sets</div><p>This is a relevance filter, not random truncation. Contacts with these skills are the actual Incentive Comp owners and evaluators. Reaching 27k skills-verified contacts is more valuable than blasting 90k generic Finance titles. Expected CPL improvement offsets volume reduction.</p></div></div></div>
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">4</div><div class="cut-title">Signal campaigns: frequency 12× → 8× per month</div><span class="cut-saving-badge">− $2,178 / mo</span><span class="cut-budget-after">Budget after: $95,998</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Reduced delivery frequency from 12× to 8× per month across all 4 Signal campaign ad sets (Sales Headcount Growth, Sales Comp / ICM Hiring, Sales Leadership Hiring, GTM / RevOps Hiring).</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why this is defensible</div><p>Signal campaigns are overlays — the same contacts simultaneously receive cold campaign impressions. At 12× signal + ~10× cold, combined exposure was ~22×/month — past fatigue threshold. Reducing signal to 8× brings combined exposure to ~18× while preserving signal-triggered creative context. 8× is still above the 4× minimum for aided recall lift.</p></div></div></div>
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">5</div><div class="cut-title">Audience penetration: 60% → 50% across all non-signal ad sets</div><span class="cut-saving-badge">− $13,938 / mo</span><span class="cut-budget-after">Budget after: $82,060</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Reduced modelled monthly audience penetration from 60% to 50% across all cold, bound, and intent ad sets. Penetration represents the share of the target contact pool LinkedIn's algorithm is expected to reach in a given month.</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why this is defensible</div><p>60% penetration was optimistic for large fixed audiences where LinkedIn's algorithm naturally caps reach before fatigue. At 50% penetration × 10× frequency, effective impression volume is 500 per 1,000 contacts monthly — above LinkedIn's recommended 400 for B2B brand consideration. A realism correction, not a strategic retreat.</p></div></div></div>
+            <div class="cut-card"><div class="cut-card-header"><div class="cut-num">6</div><div class="cut-title">Frequency: 12× → 10× per month across all non-signal ad sets</div><span class="cut-saving-badge">− $11,526 / mo</span><span class="cut-budget-after">Budget after: $70,534</span></div><div class="cut-card-body"><div class="cut-what"><div class="cut-what-lbl">What changed</div><p>Reduced monthly delivery frequency from 12× to 10× across all cold, bound, and intent ad sets. Signal campaigns are separately set to 8× (Cut 4). The 12× baseline in Model 1 was an aggressive share-of-voice target; 10× reflects a sustainable steady-state.</p></div><div class="cut-why"><div class="cut-why-lbl">✦ Why 10× is the right number</div><div class="cut-stat">~5× per-creative frequency with Rotate Evenly delivery</div><p>With two creative themes rotating via LinkedIn's Rotate Evenly setting (Spreadsheet — always-on evergreen, Mid-Year Comp — seasonal Apr–Jul), effective per-creative frequency is ~5×/month — LinkedIn's recommended range for B2B awareness. Each impression feels fresh because the creative rotates. Diminishing recall returns beyond 10×/month for fixed cold audiences.</p></div></div></div>
+          </div><!-- /cuts-list -->
+        </div>
+      </div>
+
+    </div><!-- /rationale -->
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: CAMPAIGN DEEP-DIVE (rendered by JS)
+    ═══════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-software"></div>
+    <div class="panel" id="panel-mfg"></div>
+    <div class="panel" id="panel-finserv"></div>
+    <div class="panel" id="panel-other"></div>
+    <div class="panel" id="panel-xactly"></div>
+    <div class="panel" id="panel-ainative"></div>
+    <div class="panel" id="panel-signal"></div>
+    <div class="panel" id="panel-intent"></div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: ALL AD SETS TABLE
+    ═══════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-adsets">
+      <div class="filter-row">
+        <span class="filter-lbl">Filter:</span>
+        <select class="flt" id="flt-campaign" onchange="renderAdSetTable()">
+          <option value="">All Campaigns</option>
+          <option>Software</option>
+          <option>Manufacturing</option>
+          <option>Financial Services</option>
+          <option>Other Industries</option>
+          <option>Xactly</option>
+          <option>AI Native</option>
+          <option>Signal</option>
+          <option>Intent</option>
+        </select>
+        <select class="flt" id="flt-tier" onchange="renderAdSetTable()">
+          <option value="">All Tiers</option>
+          <option>T1</option>
+          <option>T2</option>
+        </select>
+        <select class="flt" id="flt-persona" onchange="renderAdSetTable()">
+          <option value="">All Personas</option>
+          <option>Finance</option>
+          <option>Sales Leadership</option>
+          <option>Sales Comp</option>
+          <option>Ops</option>
+        </select>
+        <select class="flt" id="flt-floor" onchange="renderAdSetTable()">
+          <option value="">All Status</option>
+          <option value="floor">Floor-Hit Only</option>
+          <option value="ok">Normal Only</option>
+        </select>
+        <span class="flt-count" id="flt-count"></span>
+      </div>
+      <div class="chart-card full">
+        <div class="tbl-wrap">
+          <table class="tbl" id="adset-tbl"></table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: FLOOR ANALYSIS
+    ═══════════════════════════════════════════════════════ -->
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         PANEL: ASSUMPTIONS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-assumptions">
+      <div id="assumptions-content"></div>
+    </div>
+
+
+  </div><!-- /panel-area -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const AD_SETS_M1 = [
+  // Software (excl. 574 bound companies)
+  {campaign:"Software",name:"Software - T1 - Finance - Champions",tier:"T1",persona:"Finance",seniority:"Champions",audience:25147,projected:11769,final:11769,floored:false},
+  {campaign:"Software",name:"Software - T1 - Finance - Leadership",tier:"T1",persona:"Finance",seniority:"Leadership",audience:12197,projected:5708,final:5708,floored:false},
+  {campaign:"Software",name:"Software - T2 - Finance - All Seniority",tier:"T2",persona:"Finance",seniority:"All",audience:444,projected:69,final:620,floored:true},
+  {campaign:"Software",name:"Software - T1 - Sales Leadership - Leadership",tier:"T1",persona:"Sales Leadership",seniority:"Leadership",audience:15562,projected:7283,final:7283,floored:false},
+  {campaign:"Software",name:"Software - T2 - Sales Leadership - Leadership",tier:"T2",persona:"Sales Leadership",seniority:"Leadership",audience:209,projected:33,final:620,floored:true},
+  {campaign:"Software",name:"Software - T1 - Sales Leadership - Champions",tier:"T1",persona:"Sales Leadership",seniority:"Champions",audience:1028,projected:481,final:620,floored:true},
+  {campaign:"Software",name:"Software - T1 - Sales Comp - All Seniority",tier:"T1",persona:"Sales Comp",seniority:"All",audience:897,projected:420,final:620,floored:true},
+  {campaign:"Software",name:"Software - T2 - Sales Comp - All Seniority",tier:"T2",persona:"Sales Comp",seniority:"All",audience:32,projected:5,final:620,floored:true},
+  {campaign:"Software",name:"Software - T1 - Ops - Champions",tier:"T1",persona:"Ops",seniority:"Champions",audience:5872,projected:2748,final:2748,floored:false},
+  {campaign:"Software",name:"Software - T1 - Ops - Leadership",tier:"T1",persona:"Ops",seniority:"Leadership",audience:3285,projected:1537,final:1537,floored:false},
+  // Manufacturing (excl. 574 bound companies)
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Finance - Champions",tier:"T1",persona:"Finance",seniority:"Champions",audience:55390,projected:25923,final:25923,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Finance - Leadership",tier:"T1",persona:"Finance",seniority:"Leadership",audience:15171,projected:7100,final:7100,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Finance - Champions",tier:"T2",persona:"Finance",seniority:"Champions",audience:5793,projected:904,final:904,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Finance - Leadership",tier:"T2",persona:"Finance",seniority:"Leadership",audience:3878,projected:605,final:620,floored:true},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Sales Leadership - Leadership",tier:"T1",persona:"Sales Leadership",seniority:"Leadership",audience:18473,projected:8645,final:8645,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Sales Leadership - Leadership",tier:"T2",persona:"Sales Leadership",seniority:"Leadership",audience:5019,projected:783,final:783,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Sales Leadership - Champions",tier:"T1",persona:"Sales Leadership",seniority:"Champions",audience:1651,projected:773,final:773,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Sales Leadership - Champions",tier:"T2",persona:"Sales Leadership",seniority:"Champions",audience:589,projected:92,final:620,floored:true},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Sales Comp - All Seniority",tier:"T1",persona:"Sales Comp",seniority:"All",audience:429,projected:201,final:620,floored:true},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Sales Comp - All Seniority",tier:"T2",persona:"Sales Comp",seniority:"All",audience:151,projected:24,final:620,floored:true},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Ops - Champions",tier:"T1",persona:"Ops",seniority:"Champions",audience:2858,projected:1338,final:1338,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T1 - Ops - Leadership",tier:"T1",persona:"Ops",seniority:"Leadership",audience:2776,projected:1299,final:1299,floored:false},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Ops - Leadership",tier:"T2",persona:"Ops",seniority:"Leadership",audience:2022,projected:315,final:620,floored:true},
+  {campaign:"Manufacturing",name:"Manufacturing - T2 - Ops - Champions",tier:"T2",persona:"Ops",seniority:"Champions",audience:607,projected:95,final:620,floored:true},
+  // Financial Services (excl. 574 bound companies)
+  {campaign:"Financial Services",name:"FinServ - T1 - Finance - Champions",tier:"T1",persona:"Finance",seniority:"Champions",audience:11419,projected:5344,final:5344,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T2 - Finance - Champions",tier:"T2",persona:"Finance",seniority:"Champions",audience:20037,projected:3126,final:3126,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T1 - Finance - Leadership",tier:"T1",persona:"Finance",seniority:"Leadership",audience:4096,projected:1917,final:1917,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T2 - Finance - Leadership",tier:"T2",persona:"Finance",seniority:"Leadership",audience:8679,projected:1354,final:1354,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T1 - Sales Leadership - Leadership",tier:"T1",persona:"Sales Leadership",seniority:"Leadership",audience:2486,projected:1163,final:1163,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T2 - Sales Leadership - Leadership",tier:"T2",persona:"Sales Leadership",seniority:"Leadership",audience:4607,projected:719,final:719,floored:false},
+  {campaign:"Financial Services",name:"FinServ - T1 - Sales Comp - All Seniority",tier:"T1",persona:"Sales Comp",seniority:"All",audience:304,projected:142,final:620,floored:true},
+  {campaign:"Financial Services",name:"FinServ - T2 - Sales Comp - All Seniority",tier:"T2",persona:"Sales Comp",seniority:"All",audience:524,projected:82,final:620,floored:true},
+  {campaign:"Financial Services",name:"FinServ - T1 - Ops - All Seniority",tier:"T1",persona:"Ops",seniority:"All",audience:1174,projected:549,final:620,floored:true},
+  {campaign:"Financial Services",name:"FinServ - T2 - Ops - All Seniority",tier:"T2",persona:"Ops",seniority:"All",audience:3098,projected:483,final:620,floored:true},
+  // Other Industries (excl. 574 bound companies)
+  {campaign:"Other Industries",name:"Other - T1 - Finance - Champions",tier:"T1",persona:"Finance",seniority:"Champions",audience:90427,projected:42320,final:42320,floored:false},
+  {campaign:"Other Industries",name:"Other - T2 - Finance - Champions",tier:"T2",persona:"Finance",seniority:"Champions",audience:54261,projected:8465,final:8465,floored:false},
+  {campaign:"Other Industries",name:"Other - T1 - Finance - Leadership",tier:"T1",persona:"Finance",seniority:"Leadership",audience:26405,projected:12358,final:12358,floored:false},
+  {campaign:"Other Industries",name:"Other - T2 - Finance - Leadership",tier:"T2",persona:"Finance",seniority:"Leadership",audience:19272,projected:3006,final:3006,floored:false},
+  {campaign:"Other Industries",name:"Other - T1 - Sales Leadership - Leadership",tier:"T1",persona:"Sales Leadership",seniority:"Leadership",audience:19398,projected:9078,final:9078,floored:false},
+  {campaign:"Other Industries",name:"Other - T2 - Sales Leadership - Leadership",tier:"T2",persona:"Sales Leadership",seniority:"Leadership",audience:17438,projected:2720,final:2720,floored:false},
+  {campaign:"Other Industries",name:"Other - T1 - Sales Leadership - Champions",tier:"T1",persona:"Sales Leadership",seniority:"Champions",audience:1729,projected:809,final:809,floored:false},
+  {campaign:"Other Industries",name:"Other - T2 - Sales Leadership - Champions",tier:"T2",persona:"Sales Leadership",seniority:"Champions",audience:1984,projected:309,final:620,floored:true},
+  {campaign:"Other Industries",name:"Other - T1 - Sales Comp - All Seniority",tier:"T1",persona:"Sales Comp",seniority:"All",audience:1299,projected:608,final:620,floored:true},
+  {campaign:"Other Industries",name:"Other - T2 - Sales Comp - All Seniority",tier:"T2",persona:"Sales Comp",seniority:"All",audience:1058,projected:165,final:620,floored:true},
+  {campaign:"Other Industries",name:"Other - T1 - Ops - Champions",tier:"T1",persona:"Ops",seniority:"Champions",audience:5207,projected:2437,final:2437,floored:false},
+  {campaign:"Other Industries",name:"Other - T1 - Ops - Leadership",tier:"T1",persona:"Ops",seniority:"Leadership",audience:4443,projected:2079,final:2079,floored:false},
+  {campaign:"Other Industries",name:"Other - T2 - Ops - Leadership",tier:"T2",persona:"Ops",seniority:"Leadership",audience:3716,projected:580,final:620,floored:true},
+  {campaign:"Other Industries",name:"Other - T2 - Ops - Champions",tier:"T2",persona:"Ops",seniority:"Champions",audience:3050,projected:476,final:620,floored:true},
+  // Xactly Displacement (no tier segmentation)
+  {campaign:"Xactly",name:"Xactly - Finance - Leadership",tier:"—",persona:"Finance",seniority:"Leadership",audience:3010,projected:1409,final:1409,floored:false},
+  {campaign:"Xactly",name:"Xactly - Finance - Champions",tier:"—",persona:"Finance",seniority:"Champions",audience:2775,projected:1299,final:1299,floored:false},
+  {campaign:"Xactly",name:"Xactly - Sales Leadership - All Seniority",tier:"—",persona:"Sales Leadership",seniority:"All",audience:2026,projected:948,final:948,floored:false},
+  {campaign:"Xactly",name:"Xactly - Ops - Champions",tier:"—",persona:"Ops",seniority:"Champions",audience:1548,projected:724,final:724,floored:false},
+  {campaign:"Xactly",name:"Xactly - Ops - Leadership",tier:"—",persona:"Ops",seniority:"Leadership",audience:1063,projected:497,final:620,floored:true},
+  {campaign:"Xactly",name:"Xactly - Sales Comp - All Seniority",tier:"—",persona:"Sales Comp",seniority:"All",audience:433,projected:203,final:620,floored:true},
+  // AI Native (no tier, collapsed seniority)
+  {campaign:"AI Native",name:"AI Native - Sales Leadership - All Seniority",tier:"—",persona:"Sales Leadership",seniority:"All",audience:1247,projected:584,final:620,floored:true},
+  {campaign:"AI Native",name:"AI Native - Finance - All Seniority",tier:"—",persona:"Finance",seniority:"All",audience:974,projected:456,final:620,floored:true},
+  {campaign:"AI Native",name:"AI Native - Ops - All Seniority",tier:"—",persona:"Ops",seniority:"All",audience:853,projected:399,final:620,floored:true},
+  // Signal Campaigns (Openfunnel signals, 252 unique companies)
+  {campaign:"Signal",name:"Signal · Sales Headcount Growth",tier:"—",persona:"Sales Leadership",seniority:"All",audience:8154,projected:3816,final:3816,floored:false},
+  {campaign:"Signal",name:"Signal · Sales Comp / ICM Hiring",tier:"—",persona:"Sales Comp",seniority:"All",audience:5419,projected:2536,final:2536,floored:false},
+  {campaign:"Signal",name:"Signal · Sales Leadership Hiring",tier:"—",persona:"Sales Leadership",seniority:"All",audience:1322,projected:619,final:620,floored:true},
+  {campaign:"Signal",name:"Signal · GTM / RevOps Hiring",tier:"—",persona:"Ops",seniority:"All",audience:1455,projected:681,final:681,floored:false},
+  // Intent Campaigns (intent score > 21, 311 companies, same params as cold)
+  {campaign:"Intent",name:"Intent · Finance · Leadership",tier:"—",persona:"Finance",seniority:"Leadership",audience:7005,projected:3278,final:3278,floored:false},
+  {campaign:"Intent",name:"Intent · Finance · Champions",tier:"—",persona:"Finance",seniority:"Champions",audience:13371,projected:6258,final:6258,floored:false},
+  {campaign:"Intent",name:"Intent · Ops · Leadership",tier:"—",persona:"Ops",seniority:"Leadership",audience:2634,projected:1233,final:1233,floored:false},
+  {campaign:"Intent",name:"Intent · Ops · Champions",tier:"—",persona:"Ops",seniority:"Champions",audience:2346,projected:1098,final:1098,floored:false},
+  {campaign:"Intent",name:"Intent · Sales Comp · All Seniority",tier:"—",persona:"Sales Comp",seniority:"All",audience:658,projected:308,final:620,floored:true},
+];
+
+// ─── MODEL 2 — ADJUSTED AD SETS ──────────────────────────────────────────────
+const M2_SKILLS_SETS = [
+  "Other - T1 - Finance - Champions",
+  "Manufacturing - T1 - Finance - Champions",
+  "Other - T1 - Finance - Leadership"
+];
+const M2_COLD_CAMPS = ['Software','Manufacturing','Financial Services','Other Industries'];
+
+const AD_SETS_M2 = AD_SETS_M1
+  .filter(r => {
+    if(r.tier === 'T2') return false;
+    if(r.persona === 'Sales Leadership' && r.tier === 'T1' && M2_COLD_CAMPS.includes(r.campaign)) return false;
+    return true;
+  })
+  .map(r => {
+    let audience = r.audience;
+    if(M2_SKILLS_SETS.includes(r.name)) audience = Math.round(audience * 0.30);
+    const isSignal = r.campaign === 'Signal';
+    const pen  = isSignal ? 0.60 : 0.50;
+    const freq = isSignal ? 8 : 10;
+    const projected = Math.round((audience * pen * freq * 65) / 1000);
+    const final     = Math.max(620, projected);
+    const floored   = projected < 620;
+    return {...r, audience, projected, final, floored};
+  });
+
+let AD_SETS = AD_SETS_M1; // active dataset — swapped by model toggle
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const CAMP_COLORS = {
+  "Software":          {bg:"#6366f1",light:"#EEF2FF",border:"#C7D2FE"},
+  "Manufacturing":     {bg:"#10b981",light:"#F0FDF4",border:"#A7F3D0"},
+  "Financial Services":{bg:"#f59e0b",light:"#FFFBEB",border:"#FDE68A"},
+  "Other Industries":  {bg:"#8b5cf6",light:"#F5F3FF",border:"#DDD6FE"},
+  "Xactly":            {bg:"#e11d48",light:"#FFF1F2",border:"#FECDD3"},
+  "AI Native":         {bg:"#06b6d4",light:"#ECFEFF",border:"#A5F3FC"},
+  "Intent":            {bg:"#7c3aed",light:"#F5F3FF",border:"#DDD6FE"},
+  "Signal":            {bg:"#0891b2",light:"#ECFEFF",border:"#A5F3FC"},
+};
+const PERSONA_COLORS = {
+  "Finance":         "#f97316",
+  "Sales Leadership":"#0ea5e9",
+  "Sales Comp":      "#f43f5e",
+  "Ops":             "#8b5cf6",
+};
+const CAMPAIGNS = ["Software","Manufacturing","Financial Services","Other Industries","Xactly","AI Native","Signal","Intent"];
+let TOTAL = AD_SETS.reduce((s,r)=>s+r.final,0);
+
+function fmt(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n)}
+function fmtK(n){return n>=1000?'$'+(n/1000).toFixed(1)+'K':fmt(n)}
+function pct(n,t){return((n/t)*100).toFixed(1)+'%'}
+
+// ─── AGGREGATIONS ─────────────────────────────────────────────────────────────
+function groupBy(key){
+  return AD_SETS.reduce((acc,r)=>{
+    (acc[r[key]]||(acc[r[key]]={total:0,count:0,audience:0,floored:0}));
+    acc[r[key]].total+=r.final; acc[r[key]].count++; acc[r[key]].audience+=r.audience;
+    if(r.floored) acc[r[key]].floored++;
+    return acc;
+  },{});
+}
+let byCamp   = groupBy('campaign');
+let byPersona= groupBy('persona');
+let byTier   = groupBy('tier');
+
+function recomputeAggregates(){
+  TOTAL     = AD_SETS.reduce((s,r)=>s+r.final,0);
+  byCamp    = groupBy('campaign');
+  byPersona = groupBy('persona');
+  byTier    = groupBy('tier');
+}
+
+// ─── CHART REGISTRY ───────────────────────────────────────────────────────────
+const charts = {};
+function mkChart(id, config){
+  if(charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  charts[id] = new Chart(ctx, config);
+  return charts[id];
+}
+
+// ─── EXEC TABLES ──────────────────────────────────────────────────────────────
+
+// Hardcoded account / contact universe per campaign
+const CAMP_ACCOUNTS = {
+  "Software":           {accounts:7851,  contacts:82996},
+  "Manufacturing":      {accounts:13713, contacts:161182},
+  "Financial Services": {accounts:2349,  contacts:61527},
+  "Other Industries":   {accounts:21267, contacts:223893},
+  "Xactly":             {accounts:239,   contacts:9808},
+  "AI Native":          {accounts:335,   contacts:1254},
+  "Signal":             {accounts:254,   contacts:16350},
+  "Intent":             {accounts:288,   contacts:26014},
+};
+
+function buildExecCharts(){
+  // ── Table 1: Demand Creation vs Demand Capture ────────────────────────────
+  const DC_CREATE  = ["Software","Manufacturing","Financial Services","Other Industries","Xactly","AI Native"];
+  const DC_CAPTURE = ["Intent"];
+
+  const sumCamps = camps => camps.reduce((s,c)=>{
+    return s + AD_SETS.filter(r=>r.campaign===c).reduce((t,r)=>t+r.final,0);
+  },0);
+
+  const createBase   = sumCamps(DC_CREATE);
+  const signalTotal  = AD_SETS.filter(r=>r.campaign==='Signal').reduce((s,r)=>s+r.final,0);
+  const captureBase  = sumCamps(DC_CAPTURE);
+
+  // Signal overlays both layers — split proportionally by baseline budget weight
+  const baseSum       = createBase + captureBase;
+  const signalCreate  = Math.round(signalTotal * (createBase / baseSum));
+  const signalCapture = signalTotal - signalCreate;
+
+  const createTotal  = createBase  + signalCreate;
+  const captureTotal = captureBase + signalCapture;
+
+  const demandRows = [
+    {label:'Demand Creation', desc:`Cold campaigns + signal overlay — incl. ${fmt(signalCreate)} signal`, val:createTotal,  color:'#6366f1'},
+    {label:'Demand Capture',  desc:`Intent campaigns + signal overlay — incl. ${fmt(signalCapture)} signal`, val:captureTotal, color:'#7c3aed'},
+  ];
+
+  document.getElementById('demand-split-tbl').innerHTML = `
+    <table class="tbl">
+      <thead><tr>
+        <th>Category</th>
+        <th class="r">Monthly Budget</th>
+        <th class="r">Annual</th>
+        <th class="r">% of Total</th>
+      </tr></thead>
+      <tbody>
+      ${demandRows.map(row=>`
+        <tr>
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span style="width:10px;height:10px;border-radius:2px;background:${row.color};display:inline-block;flex-shrink:0"></span>
+              <span>
+                <strong style="font-size:12px">${row.label}</strong>
+                <span class="tbl-sub">${row.desc}</span>
+              </span>
+            </span>
+          </td>
+          <td class="r"><strong>${fmt(row.val)}</strong></td>
+          <td class="r" style="color:#666">${fmt(row.val*12)}</td>
+          <td class="r">
+            <div class="bbar-wrap" style="justify-content:flex-end;gap:6px">
+              <div class="bbar-bg" style="width:60px"><div class="bbar-fill" style="width:${(row.val/TOTAL*100).toFixed(0)}%;background:${row.color}"></div></div>
+              <span style="font-size:11px;color:#555;min-width:36px;text-align:right">${pct(row.val,TOTAL)}</span>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot><tr>
+        <td><strong>Total</strong></td>
+        <td class="r"><strong>${fmt(TOTAL)}</strong></td>
+        <td class="r"><strong>${fmt(TOTAL*12)}</strong></td>
+        <td class="r"><strong>100%</strong></td>
+      </tr></tfoot>
+    </table>`;
+
+  // ── Table 2: Cold / Intent / Signal T1 vs T2 breakdown ───────────────────
+  const COLD_CAMPS = ["Software","Manufacturing","Financial Services","Other Industries"];
+  const BOUND_CAMPS = ["Xactly","AI Native"];
+
+  const calcT = (camps, tier) => camps.reduce((s,c)=>
+    s + AD_SETS.filter(r=>r.campaign===c && r.tier===tier).reduce((t,r)=>t+r.final,0), 0);
+
+  const tierData = [
+    {
+      label:'Cold',
+      sub:'Software / Mfg / FinServ / Other',
+      t1: calcT(COLD_CAMPS,'T1'),
+      t2: calcT(COLD_CAMPS,'T2'),
+      nt: 0,
+      color:'#6366f1'
+    },
+    {
+      label:'Bound Campaigns',
+      sub:'Xactly + AI Native (no tier)',
+      t1:0, t2:0,
+      nt: calcT(BOUND_CAMPS,'—'),
+      color:'#e11d48'
+    },
+    {
+      label:'Intent',
+      sub:'Intent score > 21 (P90)',
+      t1:0, t2:0,
+      nt: calcT(DC_CAPTURE,'—'),
+      color:'#7c3aed'
+    },
+    {
+      label:'Signal',
+      sub:'Openfunnel hiring & growth signals',
+      t1:0, t2:0,
+      nt: AD_SETS.filter(r=>r.campaign==='Signal').reduce((s,r)=>s+r.final,0),
+      color:'#0891b2'
+    },
+  ];
+  const grandT1 = tierData.reduce((s,r)=>s+r.t1,0);
+  const grandT2 = tierData.reduce((s,r)=>s+r.t2,0);
+  const grandNT = tierData.reduce((s,r)=>s+r.nt,0);
+  const dash = `<span style="color:#ccc">—</span>`;
+
+  document.getElementById('tier-split-tbl').innerHTML = `
+    <table class="tbl">
+      <thead><tr>
+        <th>Layer</th>
+        <th class="r">Tier 1</th>
+        <th class="r">Tier 2</th>
+        <th class="r">No Tier</th>
+        <th class="r">Total</th>
+        <th class="r">% of Total</th>
+      </tr></thead>
+      <tbody>
+      ${tierData.map(row=>{
+        const total = row.t1 + row.t2 + row.nt;
+        return `
+        <tr>
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span style="width:10px;height:10px;border-radius:2px;background:${row.color};display:inline-block;flex-shrink:0"></span>
+              <span>
+                <strong style="font-size:12px">${row.label}</strong>
+                <span class="tbl-sub">${row.sub}</span>
+              </span>
+            </span>
+          </td>
+          <td class="r">${row.t1 ? fmt(row.t1) : dash}</td>
+          <td class="r">${row.t2 ? fmt(row.t2) : dash}</td>
+          <td class="r">${row.nt ? fmt(row.nt) : dash}</td>
+          <td class="r"><strong>${fmt(total)}</strong></td>
+          <td class="r">
+            <div class="bbar-wrap" style="justify-content:flex-end;gap:6px">
+              <div class="bbar-bg" style="width:60px"><div class="bbar-fill" style="width:${(total/TOTAL*100).toFixed(0)}%;background:${row.color}"></div></div>
+              <span style="font-size:11px;color:#555;min-width:36px;text-align:right">${pct(total,TOTAL)}</span>
+            </div>
+          </td>
+        </tr>`}).join('')}
+      </tbody>
+      <tfoot><tr>
+        <td><strong>Total</strong></td>
+        <td class="r"><strong>${fmt(grandT1)}</strong></td>
+        <td class="r"><strong>${fmt(grandT2)}</strong></td>
+        <td class="r"><strong>${fmt(grandNT)}</strong></td>
+        <td class="r"><strong>${fmt(TOTAL)}</strong></td>
+        <td class="r"><strong>100%</strong></td>
+      </tr></tfoot>
+    </table>`;
+
+
+  // Campaign summary table
+  const PERSONAS = ["Finance","Sales Leadership","Sales Comp","Ops"];
+
+  const tbl = document.getElementById('camp-summary-tbl');
+  tbl.innerHTML = `
+    <thead><tr>
+      <th style="width:220px">Campaign / Persona</th>
+      <th class="r">Ad Sets</th>
+      <th class="r">Floor-Hit</th>
+      <th class="r">Accounts</th>
+      <th class="r">Contacts / Acct</th>
+      <th class="r">Total Audience</th>
+      <th class="r">Monthly Budget</th>
+      <th class="r">Annual Budget</th>
+      <th class="r">% of Total</th>
+      <th class="r">Avg / Ad Set</th>
+    </tr></thead>
+    <tbody>
+    ${CAMPAIGNS.map(c=>{
+      const d = byCamp[c];
+      const cc = CAMP_COLORS[c];
+      const campKey = c.replace(/\s+/g,'-');
+
+      // Sub-rows: Signal campaign shows individual ad sets; others group by persona
+      const SIGNAL_DOT_COLOR = '#0891b2';
+      const subRows = c === 'Signal'
+        ? AD_SETS.filter(r=>r.campaign==='Signal').map(r=>`
+          <tr class="persona-row persona-${campKey}" style="display:none;background:#fafbff">
+            <td style="padding-left:36px">
+              <span style="display:inline-flex;align-items:center;gap:7px">
+                <span style="width:7px;height:7px;border-radius:50%;background:${SIGNAL_DOT_COLOR};display:inline-block;flex-shrink:0"></span>
+                <span style="font-size:11.5px;color:#444;font-weight:500">${r.name.replace('Signal · ','')}</span>
+              </span>
+            </td>
+            <td class="r" style="font-size:11.5px;color:#666">1</td>
+            <td class="r"><span class="${r.floored?'pill pill-floor':'pill pill-ok'}" style="font-size:9px;padding:1px 6px">${r.floored?1:0}</span></td>
+            <td class="r" style="color:#ccc">—</td>
+            <td class="r" style="color:#ccc">—</td>
+            <td class="r" style="font-size:11.5px;color:#666">${r.audience.toLocaleString()}</td>
+            <td class="r" style="font-size:11.5px;color:#333;font-weight:600">${fmt(r.final)}</td>
+            <td class="r" style="font-size:11.5px;color:#666">${fmt(r.final*12)}</td>
+            <td class="r">
+              <div class="bbar-wrap" style="justify-content:flex-end">
+                <div class="bbar-bg" style="width:70px"><div class="bbar-fill" style="width:${(r.final/d.total*100).toFixed(0)}%;background:${SIGNAL_DOT_COLOR}"></div></div>
+                <div class="bbar-val" style="font-size:10.5px">${pct(r.final,d.total)}</div>
+              </div>
+            </td>
+            <td class="r" style="font-size:11.5px;color:#666">${fmt(r.final)}</td>
+          </tr>`).join('')
+        : PERSONAS.map(p=>{
+          const rows = AD_SETS.filter(r=>r.campaign===c && r.persona===p);
+          if(!rows.length) return '';
+          const pTotal    = rows.reduce((s,r)=>s+r.final,0);
+          const pAudience = rows.reduce((s,r)=>s+r.audience,0);
+          const pFloored  = rows.filter(r=>r.floored).length;
+          const pCount    = rows.length;
+          const pColor    = PERSONA_COLORS[p];
+          return `
+            <tr class="persona-row persona-${campKey}" style="display:none;background:#fafbff">
+              <td style="padding-left:36px">
+                <span style="display:inline-flex;align-items:center;gap:7px">
+                  <span style="width:7px;height:7px;border-radius:50%;background:${pColor};display:inline-block;flex-shrink:0"></span>
+                  <span style="font-size:11.5px;color:#444;font-weight:500">${p}</span>
+                </span>
+              </td>
+              <td class="r" style="font-size:11.5px;color:#666">${pCount}</td>
+              <td class="r"><span class="${pFloored>0?'pill pill-floor':'pill pill-ok'}" style="font-size:9px;padding:1px 6px">${pFloored}</span></td>
+              <td class="r" style="color:#ccc">—</td>
+              <td class="r" style="color:#ccc">—</td>
+              <td class="r" style="font-size:11.5px;color:#666">${pAudience.toLocaleString()}</td>
+              <td class="r" style="font-size:11.5px;color:#333;font-weight:600">${fmt(pTotal)}</td>
+              <td class="r" style="font-size:11.5px;color:#666">${fmt(pTotal*12)}</td>
+              <td class="r">
+                <div class="bbar-wrap" style="justify-content:flex-end">
+                  <div class="bbar-bg" style="width:70px"><div class="bbar-fill" style="width:${(pTotal/d.total*100).toFixed(0)}%;background:${pColor}"></div></div>
+                  <div class="bbar-val" style="font-size:10.5px">${pct(pTotal,d.total)}</div>
+                </div>
+              </td>
+              <td class="r" style="font-size:11.5px;color:#666">${fmt(Math.round(pTotal/pCount))}</td>
+            </tr>`;
+        }).join('');
+
+      return `
+        <tr class="camp-summary-row" data-camp="${campKey}" style="cursor:pointer" onclick="togglePersonaRows('${campKey}')">
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span class="expand-arrow" id="arrow-${campKey}" style="font-size:10px;color:#aaa;transition:transform .2s;display:inline-block">▶</span>
+              <span style="width:10px;height:10px;border-radius:2px;background:${cc.bg};display:inline-block;flex-shrink:0"></span>
+              <strong>${c}</strong>
+            </span>
+          </td>
+          <td class="r">${d.count}</td>
+          <td class="r"><span class="${d.floored>0?'pill pill-floor':'pill pill-ok'}">${d.floored}</span></td>
+          <td class="r">${(CAMP_ACCOUNTS[c]?.accounts||0).toLocaleString()}</td>
+          <td class="r">${CAMP_ACCOUNTS[c] ? (CAMP_ACCOUNTS[c].contacts/CAMP_ACCOUNTS[c].accounts).toFixed(1)+'×' : '—'}</td>
+          <td class="r">${d.audience.toLocaleString()}</td>
+          <td class="r"><strong>${fmt(d.total)}</strong></td>
+          <td class="r">${fmt(d.total*12)}</td>
+          <td class="r">
+            <div class="bbar-wrap" style="justify-content:flex-end">
+              <div class="bbar-bg" style="width:80px"><div class="bbar-fill" style="width:${(d.total/TOTAL*100).toFixed(0)}%;background:${cc.bg}"></div></div>
+              <div class="bbar-val">${pct(d.total,TOTAL)}</div>
+            </div>
+          </td>
+          <td class="r">${fmt(Math.round(d.total/d.count))}</td>
+        </tr>
+        ${subRows}`;
+    }).join('')}
+    </tbody>
+    <tfoot><tr>
+      <td><strong>Grand Total</strong></td>
+      <td class="r"><strong>${AD_SETS.length}</strong></td>
+      <td class="r"><strong>${AD_SETS.filter(r=>r.floored).length}</strong></td>
+      <td class="r"><strong>${Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.accounts,0).toLocaleString()}</strong></td>
+      <td class="r"><strong>${(()=>{const totA=Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.accounts,0);const totC=Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.contacts,0);return (totC/totA).toFixed(1)+'×';})()}</strong></td>
+      <td class="r"><strong>${AD_SETS.reduce((s,r)=>s+r.audience,0).toLocaleString()}</strong></td>
+      <td class="r"><strong>${fmt(TOTAL)}</strong></td>
+      <td class="r"><strong>${fmt(TOTAL*12)}</strong></td>
+      <td class="r"><strong>100%</strong></td>
+      <td class="r"><strong>${fmt(Math.round(TOTAL/AD_SETS.length))}</strong></td>
+    </tr></tfoot>
+  `;
+
+  // hover highlight on campaign rows
+  tbl.querySelectorAll('.camp-summary-row').forEach(row=>{
+    row.addEventListener('mouseenter',()=>row.style.background='#f5f6ff');
+    row.addEventListener('mouseleave',()=>row.style.background='');
+  });
+}
+
+function togglePersonaRows(campKey){
+  const rows = document.querySelectorAll(`.persona-${campKey}`);
+  const arrow = document.getElementById(`arrow-${campKey}`);
+  const isOpen = rows[0] && rows[0].style.display !== 'none';
+  rows.forEach(r=>r.style.display = isOpen ? 'none' : 'table-row');
+  if(arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+// ─── RANKING CHARTS ───────────────────────────────────────────────────────────
+function buildRankingCharts(){
+  const sorted = [...AD_SETS].sort((a,b)=>b.final-a.final);
+  const labels = sorted.map(r=>r.name);
+  const vals   = sorted.map(r=>r.final);
+  const pcts   = sorted.map(r=>+(r.final/TOTAL*100).toFixed(1));
+  const bgColors = sorted.map(r=>r.floored?'#fca5a5':CAMP_COLORS[r.campaign].bg);
+
+  const common = {
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},datalabels:{display:false},
+      tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
+    scales:{
+      x:{grid:{color:'#f3f4f8'},ticks:{font:{size:9},callback:v=>fmtK(v)}},
+      y:{grid:{display:false},ticks:{font:{size:9.5},padding:2}}
+    }
+  };
+
+  mkChart('ch-rank-bar',{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:3,borderSkipped:false}]},options:{...common}});
+  mkChart('ch-pct-bar',{type:'bar',data:{labels,datasets:[{data:pcts,backgroundColor:bgColors,borderRadius:3,borderSkipped:false}]},
+    options:{...common,scales:{...common.scales,x:{...common.scales.x,ticks:{...common.scales.x.ticks,callback:v=>v+'%'}}},
+      plugins:{...common.plugins,tooltip:{callbacks:{label:ctx=>' '+ctx.raw+'% of total'}}}}});
+}
+
+// ─── CAMPAIGN PANELS ──────────────────────────────────────────────────────────
+function buildCampaignPanel(camp, panelId){
+  const rows = AD_SETS.filter(r=>r.campaign===camp).sort((a,b)=>b.final-a.final);
+  const campTotal = rows.reduce((s,r)=>s+r.final,0);
+  const campAudience = rows.reduce((s,r)=>s+r.audience,0);
+  const flooredCount = rows.filter(r=>r.floored).length;
+  const floorInflation = rows.filter(r=>r.floored).reduce((s,r)=>s+(620-r.projected),0);
+  const cc = CAMP_COLORS[camp];
+
+  const personas = ["Finance","Sales Leadership","Sales Comp","Ops"];
+  const pByPersona = personas.map(p=>rows.filter(r=>r.persona===p).reduce((s,r)=>s+r.final,0));
+  const t1Budget = rows.filter(r=>r.tier==='T1').reduce((s,r)=>s+r.final,0);
+  const t2Budget = rows.filter(r=>r.tier==='T2').reduce((s,r)=>s+r.final,0);
+  const isBound = rows.every(r=>r.tier==='—');
+
+  const panelEl = document.getElementById(panelId);
+  panelEl.innerHTML = `
+    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi-card kpi-accent" style="border-top-color:${cc.bg}">
+        <div class="kpi-lbl">Monthly Budget</div>
+        <div class="kpi-val">${fmtK(campTotal)}</div>
+        <div class="kpi-sub">${pct(campTotal,TOTAL)} of total</div>
+      </div>
+      <div class="kpi-card kpi-accent" style="border-top-color:${cc.bg}">
+        <div class="kpi-lbl">Annual Budget</div>
+        <div class="kpi-val">${fmtK(campTotal*12)}</div>
+        <div class="kpi-sub">&nbsp;</div>
+      </div>
+      <div class="kpi-card kpi-accent" style="border-top-color:${cc.bg}">
+        <div class="kpi-lbl">Ad Sets</div>
+        <div class="kpi-val">${rows.length}</div>
+        <div class="kpi-sub">${flooredCount} floor-hit</div>
+      </div>
+      <div class="kpi-card kpi-accent" style="border-top-color:${cc.bg}">
+        <div class="kpi-lbl">Total Audience</div>
+        <div class="kpi-val">${(campAudience/1000).toFixed(0)}K</div>
+        <div class="kpi-sub">${campAudience.toLocaleString()} contacts</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="card-lbl">Budget by Ad Set</div>
+        <div class="card-ttl">${camp} — All ${rows.length} Ad Sets</div>
+        <div style="position:relative;height:${Math.max(180, rows.length*26)}px">
+          <canvas id="ch-${panelId}-bar"></canvas>
+        </div>
+      </div>
+      <div class="grid-2" style="display:grid;grid-template-rows:1fr 1fr;gap:14px;margin-bottom:0">
+        <div class="chart-card">
+          <div class="card-lbl">By Persona</div>
+          <div class="card-ttl">Budget Split</div>
+          <div class="donut-wrap cw-160">
+            <canvas id="ch-${panelId}-persona"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="card-lbl">Tier Split</div>
+          <div class="card-ttl">${isBound?'Bound (No Tier)':'T1 vs T2'}</div>
+          <div class="donut-wrap cw-160">
+            <canvas id="ch-${panelId}-tier"></canvas>
+            <div class="donut-center">
+              <div class="donut-center-val" style="font-size:13px">${isBound?'—':pct(t1Budget,campTotal)}</div>
+              <div class="donut-center-lbl">${isBound?'bound':'T1'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="card-lbl">Ad Set Detail</div>
+      <div class="card-ttl">${camp} — Budget Breakdown</div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Ad Set Name</th>
+            <th>Tier</th>
+            <th>Persona</th>
+            <th class="r">Audience</th>
+            <th class="r">Projected Budget</th>
+            <th class="r">Final Budget</th>
+            <th class="r">% of Campaign</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody>
+          ${rows.map(r=>`
+            <tr style="${r.floored?'background:#fff8f8':''}">
+              <td class="tbl-name">${r.name}</td>
+              <td><span class="pill ${r.tier==='T1'?'pill-t1':r.tier==='T2'?'pill-t2':''}" style="${r.tier==='—'?'background:#f1f5f9;color:#64748b':''}">${r.tier}</span></td>
+              <td><span class="pill pill-${r.persona.toLowerCase().replace(/\s+/g,'-')}">${r.persona}</span></td>
+              <td class="r">${r.audience.toLocaleString()}</td>
+              <td class="r" style="color:${r.floored?'#f87171':'#666'}">${fmt(r.projected)}</td>
+              <td class="r"><strong>${fmt(r.final)}</strong></td>
+              <td class="r">
+                <div class="bbar-wrap" style="justify-content:flex-end">
+                  <div class="bbar-bg" style="width:70px"><div class="bbar-fill" style="width:${(r.final/campTotal*100).toFixed(0)}%;background:${cc.bg}"></div></div>
+                  <div class="bbar-val">${pct(r.final,campTotal)}</div>
+                </div>
+              </td>
+              <td><span class="pill ${r.floored?'pill-floor':'pill-ok'}">${r.floored?'⚑ Floor':'✓ Ok'}</span></td>
+            </tr>
+          `).join('')}
+          </tbody>
+          <tfoot><tr>
+            <td colspan="3"><strong>Campaign Total</strong></td>
+            <td class="r"><strong>${campAudience.toLocaleString()}</strong></td>
+            <td class="r"></td>
+            <td class="r"><strong>${fmt(campTotal)}</strong></td>
+            <td class="r"><strong>100%</strong></td>
+            <td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Horizontal bar — ad sets
+  setTimeout(()=>{
+    mkChart(`ch-${panelId}-bar`,{
+      type:'bar',
+      data:{
+        labels:rows.map(r=>r.name),
+        datasets:[{
+          data:rows.map(r=>r.final),
+          backgroundColor:rows.map(r=>r.floored?'#fca5a5':cc.bg),
+          borderRadius:3,borderSkipped:false
+        }]
+      },
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},datalabels:{display:false},
+          tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} (${pct(ctx.raw,campTotal)} of campaign)`}}},
+        scales:{
+          x:{grid:{color:'#f3f4f8'},ticks:{font:{size:9.5},callback:v=>fmtK(v)}},
+          y:{grid:{display:false},ticks:{font:{size:9.5}}}
+        }
+      }
+    });
+
+    mkChart(`ch-${panelId}-persona`,{
+      type:'doughnut',
+      data:{
+        labels:personas.filter((_,i)=>pByPersona[i]>0),
+        datasets:[{
+          data:pByPersona.filter(v=>v>0),
+          backgroundColor:personas.filter((_,i)=>pByPersona[i]>0).map(p=>PERSONA_COLORS[p]),
+          borderWidth:2,borderColor:'#fff'
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'55%',
+        plugins:{
+          legend:{position:'right',labels:{font:{size:9},boxWidth:8,padding:6}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)}`}},
+          datalabels:{display:false}
+        }
+      }
+    });
+
+    if(isBound){
+      const ntBudget = rows.reduce((s,r)=>s+r.final,0);
+      mkChart(`ch-${panelId}-tier`,{
+        type:'doughnut',
+        data:{
+          labels:['Bound Campaign'],
+          datasets:[{data:[ntBudget],backgroundColor:[cc.bg],borderWidth:2,borderColor:'#fff'}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,cutout:'60%',
+          plugins:{
+            legend:{position:'right',labels:{font:{size:9},boxWidth:8,padding:6}},
+            tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} total`}},
+            datalabels:{display:false}
+          }
+        }
+      });
+    } else {
+      mkChart(`ch-${panelId}-tier`,{
+        type:'doughnut',
+        data:{
+          labels:['Tier 1','Tier 2'],
+          datasets:[{data:[t1Budget,t2Budget],backgroundColor:['#6366f1','#c7d2fe'],borderWidth:2,borderColor:'#fff'}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,cutout:'60%',
+          plugins:{
+            legend:{position:'right',labels:{font:{size:9},boxWidth:8,padding:6}},
+            tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)} (${pct(ctx.raw,campTotal)})`}},
+            datalabels:{display:false}
+          }
+        }
+      });
+    }
+  }, 50);
+}
+
+// ─── AD SET TABLE ─────────────────────────────────────────────────────────────
+let adsetSortCol = 'final', adsetSortDir = 'desc';
+function renderAdSetTable(){
+  const fCamp   = document.getElementById('flt-campaign').value;
+  const fTier   = document.getElementById('flt-tier').value;
+  const fPersona= document.getElementById('flt-persona').value;
+  const fFloor  = document.getElementById('flt-floor').value;
+
+  let rows = [...AD_SETS];
+  if(fCamp)    rows = rows.filter(r=>r.campaign===fCamp);
+  if(fTier)    rows = rows.filter(r=>r.tier===fTier);
+  if(fPersona) rows = rows.filter(r=>r.persona===fPersona);
+  if(fFloor==='floor') rows = rows.filter(r=>r.floored);
+  if(fFloor==='ok')    rows = rows.filter(r=>!r.floored);
+
+  const colMap = {name:'name',tier:'tier',persona:'persona',audience:'audience',projected:'projected',final:'final',floored:'floored'};
+  rows.sort((a,b)=>{
+    const v = colMap[adsetSortCol]||'final';
+    const av=a[v], bv=b[v];
+    const cmp = typeof av==='string'?av.localeCompare(bv):av-bv;
+    return adsetSortDir==='asc'?cmp:-cmp;
+  });
+
+  const filtTotal = rows.reduce((s,r)=>s+r.final,0);
+  document.getElementById('flt-count').textContent = `Showing ${rows.length} of ${AD_SETS.length} ad sets`;
+
+  const cols = [
+    {id:'name',label:'Ad Set Name',r:false},
+    {id:'campaign',label:'Campaign',r:false},
+    {id:'tier',label:'Tier',r:false},
+    {id:'persona',label:'Persona',r:false},
+    {id:'audience',label:'Audience',r:true},
+    {id:'projected',label:'Projected',r:true},
+    {id:'final',label:'Final Budget',r:true},
+    {id:'pct',label:'% of Total',r:true},
+    {id:'floored',label:'Status',r:false},
+  ];
+
+  const thead = `<thead><tr>${cols.map(c=>`<th class="${c.r?'r':''} ${adsetSortCol===c.id?'sort-'+adsetSortDir:''}" data-col="${c.id}">${c.label}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(r=>`
+    <tr style="${r.floored?'background:#fff8f8':''}">
+      <td class="tbl-name">${r.name}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:${CAMP_COLORS[r.campaign].bg};display:inline-block"></span>${r.campaign}</span></td>
+      <td><span class="pill ${r.tier==='T1'?'pill-t1':r.tier==='T2'?'pill-t2':''}" style="${r.tier==='—'?'background:#f1f5f9;color:#64748b':''}">${r.tier}</span></td>
+      <td><span class="pill pill-${r.persona.toLowerCase().replace(/\s+/g,'-')}">${r.persona}</span></td>
+      <td class="r">${r.audience.toLocaleString()}</td>
+      <td class="r" style="color:${r.floored?'#f87171':'#666'}">${fmt(r.projected)}</td>
+      <td class="r"><strong>${fmt(r.final)}</strong></td>
+      <td class="r">
+        <div class="bbar-wrap" style="justify-content:flex-end">
+          <div class="bbar-bg" style="width:60px"><div class="bbar-fill" style="width:${Math.min(100,(r.final/TOTAL*100*10)).toFixed(0)}%;background:${CAMP_COLORS[r.campaign].bg}"></div></div>
+          <div class="bbar-val">${pct(r.final,TOTAL)}</div>
+        </div>
+      </td>
+      <td><span class="pill ${r.floored?'pill-floor':'pill-ok'}">${r.floored?'⚑ Floor':'✓ Ok'}</span></td>
+    </tr>
+  `).join('')}</tbody>`;
+  const tfoot = `<tfoot><tr>
+    <td colspan="4"><strong>Filtered Total (${rows.length} ad sets)</strong></td>
+    <td class="r"><strong>${rows.reduce((s,r)=>s+r.audience,0).toLocaleString()}</strong></td>
+    <td class="r"></td>
+    <td class="r"><strong>${fmt(filtTotal)}</strong></td>
+    <td class="r"><strong>100%</strong></td>
+    <td></td>
+  </tr></tfoot>`;
+
+  const tbl = document.getElementById('adset-tbl');
+  tbl.innerHTML = thead+tbody+tfoot;
+  tbl.querySelectorAll('thead th[data-col]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      if(adsetSortCol===th.dataset.col) adsetSortDir=adsetSortDir==='asc'?'desc':'asc';
+      else{adsetSortCol=th.dataset.col;adsetSortDir='desc';}
+      renderAdSetTable();
+    });
+  });
+}
+
+// ─── FLOOR ANALYSIS ───────────────────────────────────────────────────────────
+function buildFloorAnalysis(){
+  const floored = AD_SETS.filter(r=>r.floored).sort((a,b)=>(b.final-b.projected)-(a.final-a.projected));
+
+  // Floor donut
+  const flooredCount = AD_SETS.filter(r=>r.floored).length;
+  const normalCount = AD_SETS.length - flooredCount;
+  mkChart('ch-floor-donut',{
+    type:'doughnut',
+    data:{
+      labels:[`Floor-Hit (${flooredCount})`,`Normal (${normalCount})`],
+      datasets:[{data:[flooredCount,normalCount],backgroundColor:['#ef4444','#6366f1'],borderWidth:3,borderColor:'#fff'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} ad sets`}},
+        datalabels:{display:false}}
+    }
+  });
+
+  // Floor by campaign bar
+  const campFloorData = CAMPAIGNS.map(c=>({
+    camp:c,
+    count:AD_SETS.filter(r=>r.campaign===c&&r.floored).length,
+    inflation:AD_SETS.filter(r=>r.campaign===c&&r.floored).reduce((s,r)=>s+(620-r.projected),0)
+  }));
+  mkChart('ch-floor-by-camp',{
+    type:'bar',
+    data:{
+      labels:['Software','Mfg','FinServ','Other','Xactly','AI Native','Signal','Intent'],
+      datasets:[
+        {label:'Floor-Hit Count',data:campFloorData.map(d=>d.count),backgroundColor:'#fca5a5',yAxisID:'y1',borderRadius:4},
+        {label:'Inflation $/mo',data:campFloorData.map(d=>d.inflation),backgroundColor:'#ef4444',yAxisID:'y2',borderRadius:4},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10}}},
+        y1:{type:'linear',position:'left',title:{display:true,text:'# Ad Sets',font:{size:9}},grid:{color:'#f3f4f8'},ticks:{font:{size:9},stepSize:1}},
+        y2:{type:'linear',position:'right',title:{display:true,text:'$/mo Inflation',font:{size:9}},grid:{display:false},ticks:{font:{size:9},callback:v=>fmtK(v)}}
+      },
+      plugins:{
+        legend:{labels:{font:{size:11},boxWidth:10}},
+        datalabels:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?` ${ctx.raw} floor-hit ad sets`:` ${fmt(ctx.raw)} inflated/mo`}}
+      }
+    }
+  });
+
+  // Floor list
+  const el = document.getElementById('floor-list');
+  el.innerHTML = floored.map(r=>`
+    <div class="floor-item">
+      <div style="flex:1">
+        <div class="floor-item-name">${r.name}</div>
+        <div class="floor-item-sub">${r.campaign} · ${r.tier} · ${r.persona} · ${r.audience.toLocaleString()} contacts</div>
+      </div>
+      <div class="floor-item-amt" style="margin:0 16px;text-align:right">
+        <div class="floor-item-proj">Organic: ${fmt(r.projected)}</div>
+        <div class="floor-item-diff">Inflation: +${fmt(620-r.projected)}</div>
+      </div>
+      <div class="floor-item-amt">
+        <div class="floor-item-final">${fmt(r.final)}</div>
+        <div style="font-size:9px;color:#fca5a5;margin-top:2px">AT FLOOR</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+const PANEL_TITLES = {
+  exec:'Exec Summary', rationale:'Architecture Rationale',
+  software:'Software Campaign', mfg:'Manufacturing Campaign',
+  finserv:'Financial Services Campaign', other:'Other Industries Campaign',
+  xactly:'Xactly Displacement Campaign', ainative:'AI Native Campaign', signal:'Signal Campaigns', intent:'Intent Campaigns',
+  adsets:'All Ad Sets', assumptions:'Model Assumptions'
+};
+const campPanelBuilt = {};
+
+function switchTab(tab){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const panel = document.getElementById('panel-'+tab);
+  if(panel) panel.classList.add('active');
+  document.getElementById('page-title').textContent = PANEL_TITLES[tab]||tab;
+
+  // Lazy build panels
+  if(tab==='software' && !campPanelBuilt.software){ buildCampaignPanel('Software','panel-software'); campPanelBuilt.software=true; }
+  if(tab==='mfg' && !campPanelBuilt.mfg){ buildCampaignPanel('Manufacturing','panel-mfg'); campPanelBuilt.mfg=true; }
+  if(tab==='finserv' && !campPanelBuilt.finserv){ buildCampaignPanel('Financial Services','panel-finserv'); campPanelBuilt.finserv=true; }
+  if(tab==='other' && !campPanelBuilt.other){ buildCampaignPanel('Other Industries','panel-other'); campPanelBuilt.other=true; }
+  if(tab==='xactly' && !campPanelBuilt.xactly){ buildCampaignPanel('Xactly','panel-xactly'); campPanelBuilt.xactly=true; }
+  if(tab==='ainative' && !campPanelBuilt.ainative){ buildCampaignPanel('AI Native','panel-ainative'); campPanelBuilt.ainative=true; }
+  if(tab==='signal' && !campPanelBuilt.signal){ buildCampaignPanel('Signal','panel-signal'); campPanelBuilt.signal=true; }
+  if(tab==='intent' && !campPanelBuilt.intent){ buildCampaignPanel('Intent','panel-intent'); campPanelBuilt.intent=true; }
+  if(tab==='adsets' && !campPanelBuilt.adsets){ renderAdSetTable(); campPanelBuilt.adsets=true; }
+  if(tab==='assumptions'){ buildAssumptions(); }
+}
+
+document.querySelector('.sidebar').addEventListener('click', e=>{
+  const btn = e.target.closest('.nav-item');
+  if(btn) switchTab(btn.dataset.tab);
+});
+
+// ─── PERSONA DISTRIBUTION TABLE ───────────────────────────────────────────────
+const PERSONAS_ORDER = ["Finance","Sales Leadership","Sales Comp","Ops"];
+
+// Pre-compute pivot data: persona × campaign → {total, count, floored, audience}
+function buildPersonaPivot(){
+  const pivot = {};
+  PERSONAS_ORDER.forEach(p=>{
+    pivot[p] = {};
+    CAMPAIGNS.forEach(c=>{
+      const rows = AD_SETS.filter(r=>r.persona===p && r.campaign===c);
+      pivot[p][c] = {
+        total:    rows.reduce((s,r)=>s+r.final,0),
+        count:    rows.length,
+        floored:  rows.filter(r=>r.floored).length,
+        audience: rows.reduce((s,r)=>s+r.audience,0),
+      };
+    });
+    // row totals
+    pivot[p]._rowTotal = CAMPAIGNS.reduce((s,c)=>s+pivot[p][c].total,0);
+    pivot[p]._rowCount = CAMPAIGNS.reduce((s,c)=>s+pivot[p][c].count,0);
+    pivot[p]._rowAudience = CAMPAIGNS.reduce((s,c)=>s+pivot[p][c].audience,0);
+    pivot[p]._rowFloored = CAMPAIGNS.reduce((s,c)=>s+pivot[p][c].floored,0);
+  });
+  return pivot;
+}
+
+// Column totals
+function buildColTotals(pivot){
+  const ct = {};
+  CAMPAIGNS.forEach(c=>{
+    ct[c] = PERSONAS_ORDER.reduce((s,p)=>s+pivot[p][c].total,0);
+  });
+  ct._grand = PERSONAS_ORDER.reduce((s,p)=>s+pivot[p]._rowTotal,0);
+  return ct;
+}
+
+// Heat intensity 0-5 based on value's rank within a set of values
+function heatClass(val, vals){
+  if(val===0) return 'heat-0';
+  const max = Math.max(...vals);
+  const ratio = val/max;
+  if(ratio<0.05) return 'heat-1';
+  if(ratio<0.15) return 'heat-2';
+  if(ratio<0.35) return 'heat-3';
+  if(ratio<0.65) return 'heat-4';
+  return 'heat-5';
+}
+
+let personaView = 'abs'; // 'abs' | 'pct-row' | 'pct-col'
+let personaPivot = buildPersonaPivot();
+let colTotals    = buildColTotals(personaPivot);
+
+function renderPersonaTable(){
+  const tbl = document.getElementById('persona-dist-tbl');
+  if(!tbl) return;
+
+  const shortCamp = {
+    "Software":"Software",
+    "Manufacturing":"Mfg",
+    "Financial Services":"FinServ",
+    "Other Industries":"Other",
+    "Xactly":"Xactly",
+    "AI Native":"AI Native",
+  };
+
+  // For heat: all cell values (excluding totals)
+  const allVals = PERSONAS_ORDER.flatMap(p=>CAMPAIGNS.map(c=>personaPivot[p][c].total));
+
+  const thead = `<thead>
+    <tr>
+      <th style="width:160px">Persona</th>
+      ${CAMPAIGNS.map(c=>`
+        <th class="r" style="min-width:110px">
+          <span style="display:inline-flex;align-items:center;gap:5px;justify-content:flex-end">
+            <span style="width:8px;height:8px;border-radius:2px;background:${CAMP_COLORS[c].bg};display:inline-block"></span>
+            ${shortCamp[c]}
+          </span>
+        </th>`).join('')}
+      <th class="r" style="min-width:110px;background:#f7f8fc">Total</th>
+      <th class="r" style="min-width:80px">Ad Sets</th>
+      <th class="r" style="min-width:80px">Floor-Hit</th>
+      <th class="r" style="min-width:100px">Audience</th>
+    </tr>
+  </thead>`;
+
+  const personaColorDot = p=>`<span style="width:9px;height:9px;border-radius:50%;background:${PERSONA_COLORS[p]};display:inline-block;flex-shrink:0"></span>`;
+
+  const tbody = `<tbody>
+    ${PERSONAS_ORDER.map(p=>{
+      const row = personaPivot[p];
+      return `<tr>
+        <td>
+          <span style="display:inline-flex;align-items:center;gap:7px">
+            ${personaColorDot(p)}
+            <strong style="font-size:12px">${p}</strong>
+          </span>
+        </td>
+        ${CAMPAIGNS.map(c=>{
+          const v = row[c].total;
+          if(v===0) return `<td class="r heat-0" style="border-radius:4px"><span style="color:#ccc;font-size:11px">—</span></td>`;
+          const hc = heatClass(v, allVals);
+          let display;
+          if(personaView==='abs')      display = `<span style="display:block;font-weight:700;font-size:12px">${fmt(v)}</span>`;
+          else if(personaView==='pct-row') display = `<span style="display:block;font-weight:700;font-size:12px">${pct(v,row._rowTotal)}</span><span style="display:block;font-size:9px;margin-top:1px;opacity:.75">${fmt(v)}</span>`;
+          else display = `<span style="display:block;font-weight:700;font-size:12px">${pct(v,colTotals[c])}</span><span style="display:block;font-size:9px;margin-top:1px;opacity:.75">${fmt(v)}</span>`;
+          return `<td class="r ${hc}" style="border-radius:4px">${display}</td>`;
+        }).join('')}
+        <td class="r persona-total-col">
+          <span style="display:block;font-size:12px">${fmt(row._rowTotal)}</span>
+          <span style="display:block;font-size:9px;color:#9497b5;margin-top:1px">${pct(row._rowTotal,TOTAL)} of total</span>
+        </td>
+        <td class="r" style="font-size:11.5px;color:#555">${row._rowCount}</td>
+        <td class="r"><span class="${row._rowFloored>0?'pill pill-floor':'pill pill-ok'}" style="font-size:9px;padding:1px 6px">${row._rowFloored}</span></td>
+        <td class="r" style="font-size:11.5px;color:#555">${row._rowAudience.toLocaleString()}</td>
+      </tr>`;
+    }).join('')}
+  </tbody>`;
+
+  const tfoot = `<tfoot>
+    <tr class="persona-total-row">
+      <td><strong>Campaign Total</strong></td>
+      ${CAMPAIGNS.map(c=>`<td class="r"><strong>${fmt(colTotals[c])}</strong><span style="display:block;font-size:9px;color:#9497b5;font-weight:400">${pct(colTotals[c],TOTAL)}</span></td>`).join('')}
+      <td class="r persona-total-col"><strong>${fmt(TOTAL)}</strong></td>
+      <td class="r" style="font-size:11.5px"><strong>${AD_SETS.length}</strong></td>
+      <td class="r" style="font-size:11.5px"><strong>${AD_SETS.filter(r=>r.floored).length}</strong></td>
+      <td class="r" style="font-size:11.5px"><strong>${AD_SETS.reduce((s,r)=>s+r.audience,0).toLocaleString()}</strong></td>
+    </tr>
+  </tfoot>`;
+
+  tbl.innerHTML = thead + tbody + tfoot;
+}
+
+function switchPersonaView(view){
+  personaView = view;
+  document.querySelectorAll('.ptbl-toggle').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ptbl-'+view).classList.add('active');
+  renderPersonaTable();
+}
+
+// ─── MODEL TOGGLE ─────────────────────────────────────────────────────────────
+let currentModel = 1;
+
+function setModel(m){
+  if(currentModel === m) return;
+  currentModel = m;
+
+  // Swap active dataset & recompute all aggregates
+  AD_SETS = m === 2 ? AD_SETS_M2 : AD_SETS_M1;
+  recomputeAggregates();
+
+  // Recompute persona pivot
+  personaPivot = buildPersonaPivot();
+  colTotals    = buildColTotals(personaPivot);
+
+  // Reset all lazily-built panel flags so they rebuild with new data
+  Object.keys(campPanelBuilt).forEach(k => delete campPanelBuilt[k]);
+
+  // Toggle button states
+  document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.model-btn.m${m}`).classList.add('active');
+
+  // Sidebar sub-heading
+  const sub = document.querySelector('.sb-sub');
+  if(sub) sub.innerHTML = m===1
+    ? 'All Campaigns · May 2026<br>66 Ad Sets · $212.7K/mo'
+    : 'All Campaigns · May 2026<br>37 Ad Sets · $70.5K/mo <span style="color:#38bdf8;font-weight:700">[M2]</span>';
+
+  // Sidebar footer assumptions badge
+  const badge = document.querySelector('.sb-badge');
+  if(badge) badge.innerHTML = m===1
+    ? 'CPM $65 · T1: 60%/12× · T2: 30%/8×<br>Bound: 60%/12× · Floor $620'
+    : 'CPM $65 · 50%/10× · Signal: 60%/8×<br>No T2 · No Cold Sales Ldr · Floor $620';
+
+  // Update KPI cards in exec panel
+  const floorCount = AD_SETS.filter(r=>r.floored).length;
+  const floorPct   = ((floorCount/AD_SETS.length)*100).toFixed(1);
+  const kpiVals = document.querySelectorAll('#panel-exec .kpi-card .kpi-val');
+  if(kpiVals.length >= 4){
+    kpiVals[0].textContent = fmt(TOTAL);
+    kpiVals[1].textContent = TOTAL >= 1000000 ? '$'+(TOTAL*12/1000000).toFixed(2)+'M' : '$'+(TOTAL*12/1000).toFixed(0)+'K';
+    kpiVals[2].textContent = AD_SETS.length;
+    kpiVals[3].textContent = floorCount;
+  }
+  const kpiSubs = document.querySelectorAll('#panel-exec .kpi-card .kpi-sub');
+  if(kpiSubs.length >= 4){
+    kpiSubs[2].textContent = `${AD_SETS.length} ad sets`;
+    kpiSubs[3].textContent = `${floorPct}% of all ad sets`;
+  }
+
+  // Rebuild exec summary tables & persona table (always visible)
+  buildExecCharts();
+  renderPersonaTable();
+
+  // Re-render the currently active panel in place (no navigation)
+  const activeTab = document.querySelector('.nav-item.active')?.dataset?.tab;
+  if(activeTab && activeTab !== 'rationale'){
+    campPanelBuilt[activeTab] = false;
+    const rebuildMap = {
+      software:    ()=>buildCampaignPanel('Software','panel-software'),
+      mfg:         ()=>buildCampaignPanel('Manufacturing','panel-mfg'),
+      finserv:     ()=>buildCampaignPanel('Financial Services','panel-finserv'),
+      other:       ()=>buildCampaignPanel('Other Industries','panel-other'),
+      xactly:      ()=>buildCampaignPanel('Xactly','panel-xactly'),
+      ainative:    ()=>buildCampaignPanel('AI Native','panel-ainative'),
+      signal:      ()=>buildCampaignPanel('Signal','panel-signal'),
+      intent:      ()=>buildCampaignPanel('Intent','panel-intent'),
+      adsets:      ()=>renderAdSetTable(),
+      assumptions: ()=>buildAssumptions(),
+    };
+    if(rebuildMap[activeTab]) rebuildMap[activeTab]();
+  }
+}
+
+// ─── ASSUMPTIONS PANEL ────────────────────────────────────────────────────────
+function buildAssumptions(){
+  const m = currentModel;
+  const isM2 = m === 2;
+
+  // Per-campaign assumption rows
+  const campRows = [
+    { camp:'Software',          tier: isM2?'T1 only':'T1 + T2', pen: isM2?'50%':'T1: 60% / T2: 30%', freq: isM2?'10×':'T1: 12× / T2: 8×', cpm:'$65', notes: isM2?'Sales Leadership removed. Finance, Sales Comp, Ops personas only.':'Cold vertical. All 4 personas.' },
+    { camp:'Manufacturing',     tier: isM2?'T1 only':'T1 + T2', pen: isM2?'50%':'T1: 60% / T2: 30%', freq: isM2?'10×':'T1: 12× / T2: 8×', cpm:'$65', notes: isM2?'Finance Champions + Leadership skills-filtered to 30% audience (Member Skills AND condition).':'Cold vertical. All 4 personas.' },
+    { camp:'Financial Services',tier: isM2?'T1 only':'T1 + T2', pen: isM2?'50%':'T1: 60% / T2: 30%', freq: isM2?'10×':'T1: 12× / T2: 8×', cpm:'$65', notes: isM2?'Sales Leadership removed. Finance, Sales Comp, Ops only.':'Cold vertical. All 4 personas.' },
+    { camp:'Other Industries',  tier: isM2?'T1 only':'T1 + T2', pen: isM2?'50%':'T1: 60% / T2: 30%', freq: isM2?'10×':'T1: 12× / T2: 8×', cpm:'$65', notes: isM2?'Finance Champions + Finance Leadership skills-filtered to 30% audience. Sales Leadership removed.':'Cold vertical. All 4 personas. Largest campaign by audience.' },
+    { camp:'Xactly',            tier:'—',                        pen: isM2?'50%':'60%',               freq: isM2?'10×':'12×',               cpm:'$65', notes:'Bound / defined TAM. ICM displacement targeting. All personas.' },
+    { camp:'AI Native',         tier:'—',                        pen: isM2?'50%':'60%',               freq: isM2?'10×':'12×',               cpm:'$65', notes:'Bound / defined TAM. AI-first companies. Small defined universe, multiple floor-hits expected.' },
+    { camp:'Signal',            tier:'—',                        pen:'60%',                            freq: isM2?'8×':'12×',                cpm:'$65', notes: isM2?'Overlay on cold + intent. Frequency reduced (parallel with cold avoids fatigue). 4 signal types: Sales Headcount Growth, Sales Comp / ICM Hiring, Sales Leadership Hiring, GTM / RevOps Hiring.':'Overlay on cold + intent audiences. 4 signal types based on Openfunnel hiring data.' },
+    { camp:'Intent',            tier:'—',                        pen: isM2?'50%':'60%',               freq: isM2?'10×':'12×',               cpm:'$65', notes:'Intent score > 21 (P90). Removed from cold campaigns. Finance + Ops + Sales Comp personas.' },
+  ];
+
+  const rowColor = isM2 ? '#f0fdf4' : '#f7f8fc';
+  const badge = isM2
+    ? '<span style="background:#0ea5e9;color:#fff;border-radius:6px;padding:2px 10px;font-size:11px;font-weight:700;margin-left:10px">Model 2: Adjusted</span>'
+    : '<span style="background:#6366f1;color:#fff;border-radius:6px;padding:2px 10px;font-size:11px;font-weight:700;margin-left:10px">Model 1: True Bottom-Up</span>';
+
+  // TAM coverage stats
+  const adSetAudience = AD_SETS.reduce((s,r)=>s+r.audience,0);
+  const companies = [...new Set(AD_SETS.map(r=>r.campaign))].length;
+  const totalTAMContacts = 529598;
+  const coveragePct = ((adSetAudience/totalTAMContacts)*100).toFixed(1);
+
+  document.getElementById('assumptions-content').innerHTML = `
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="card-lbl">Model Parameters</div>
+      <div class="card-ttl" style="margin-bottom:4px">Budget Formula &amp; Assumptions ${badge}</div>
+      <p style="font-size:12px;color:#888;margin:0 0 18px">All assumptions are model-aware — switch the toggle in the topbar to compare M1 vs M2 parameters.</p>
+
+      <div style="background:#f7f8fc;border-radius:10px;padding:14px 20px;margin-bottom:18px;font-family:monospace;font-size:13px;color:#333;border:1px solid #eef0f8;line-height:2.2">
+        Budget = (Audience × Penetration × Frequency × CPM) / 1,000<br>
+        Final Budget = max(Budget, $620 floor)
+      </div>
+
+      <div class="asmp-row"><div class="asmp-label">CPM — all campaigns</div><div class="asmp-val">$65</div><div class="asmp-note">Flat rate applied uniformly. Based on observed LinkedIn CPMs for B2B tech audiences targeting Finance / Sales / Ops personas. Single Image ad format baseline.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Budget Floor</div><div class="asmp-val">$620 / mo</div><div class="asmp-note">LinkedIn minimum viable budget to exit the learning phase and maintain consistent delivery. Ad sets below $620 organic projection are floored at this value.</div></div>
+      ${isM2 ? `
+      <div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">Cold / Bound / Intent — Penetration</div><div class="asmp-val" style="color:#16a34a">50%</div><div class="asmp-note">Reduced from 60% (M1). More empirically grounded for fixed B2B audiences; LinkedIn's algorithm naturally caps effective reach before fatigue for large, static pools.</div></div>
+      <div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">Cold / Bound / Intent — Frequency</div><div class="asmp-val" style="color:#16a34a">10×</div><div class="asmp-note">Reduced from 12× (M1). With 2 themes rotating via LinkedIn Rotate Evenly, effective per-creative frequency ≈ 5× — within LinkedIn's recommended B2B awareness range. Diminishing recall returns beyond 10×/month for fixed cold audiences.</div></div>
+      <div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">Signal — Penetration</div><div class="asmp-val">60%</div><div class="asmp-note">Unchanged from M1. Signal audiences are smaller and highly specific — higher penetration is justified and achievable.</div></div>
+      <div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">Signal — Frequency</div><div class="asmp-val" style="color:#16a34a">8×</div><div class="asmp-note">Reduced from 12× (M1). Signal campaigns are overlays — contacts already receive cold/intent impressions in parallel. Combined monthly exposure ≈ 18× (10 cold + 8 signal), avoiding fatigue while preserving contextual signal-triggered creative.</div></div>
+      <div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">Skills filter — audience retention</div><div class="asmp-val" style="color:#16a34a">~30%</div><div class="asmp-note">AND condition: LinkedIn Member Skills (Sales Compensation, Commission Management, Incentive Compensation, Variable Pay) applied to the 3 largest Finance T1 ad sets. ~30% retention estimated based on skill prevalence in Finance titles across LinkedIn's B2B audience data.</div></div>
+      ` : `
+      <div class="asmp-row"><div class="asmp-label">Tier 1 — Penetration</div><div class="asmp-val">60%</div><div class="asmp-note">60% of the contact audience will be reached at least once per month. Applied to all T1 cold, bound, intent, and signal ad sets.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Tier 1 — Frequency</div><div class="asmp-val">12×</div><div class="asmp-note">12 impressions per reached contact per month. Aggressive share-of-voice target for a fixed cold TAM where audience cannot be expanded. Effective impressions per contact in full audience = 60% × 12 = 7.2.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Tier 2 — Penetration</div><div class="asmp-val">30%</div><div class="asmp-note">30% reach for T2 accounts — lower-fit companies warrant a lighter touch. Effective impressions per contact = 30% × 8 = 2.4.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Tier 2 — Frequency</div><div class="asmp-val">8×</div><div class="asmp-note">8 impressions per reached contact. T2 intensity is ~33% of T1 for the same audience size.</div></div>
+      `}
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="card-lbl">Per-Campaign Parameters</div>
+      <div class="card-ttl" style="margin-bottom:14px">Targeting assumptions by campaign</div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Campaign</th>
+            <th class="r">Tier</th>
+            <th class="r">Penetration</th>
+            <th class="r">Frequency</th>
+            <th class="r">CPM</th>
+            <th>Notes</th>
+          </tr></thead>
+          <tbody>
+          ${campRows.map(r=>`
+            <tr>
+              <td><strong>${r.camp}</strong></td>
+              <td class="r"><span style="font-size:11px;color:#666">${r.tier}</span></td>
+              <td class="r">${r.pen}</td>
+              <td class="r">${r.freq}</td>
+              <td class="r">${r.cpm}</td>
+              <td style="font-size:12px;color:#555">${r.notes}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="card-lbl">Audience Sourcing</div>
+      <div class="card-ttl" style="margin-bottom:14px">How contact pools were built</div>
+      <div class="asmp-row"><div class="asmp-label">Data source</div><div class="asmp-val" style="font-size:11px">HubSpot TAM export</div><div class="asmp-note">Custom HubSpot report (May 2026). Raw export: 939,865 rows across 48,647 unique companies. Deduplication on company domain field.</div></div>
+      <div class="asmp-row"><div class="asmp-label">TAM filter — ABM persona</div><div class="asmp-val" style="font-size:11px">4 groups</div><div class="asmp-note">Finance Champions, Finance Leadership, Sales Leadership, Sales Comp, Ops — derived from HubSpot ABM Persona Group field. Only contacts with a mapped persona are included in ad sets.</div></div>
+      <div class="asmp-row"><div class="asmp-label">TAM filter — seniority</div><div class="asmp-val" style="font-size:11px">IC + Manager+</div><div class="asmp-note">Seniority levels mapped from HubSpot Seniority Level field. Champions = Director / VP / C-Suite. Leadership = Manager / Senior IC. Ops = all seniority within Ops persona group.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Final cold TAM</div><div class="asmp-val" style="font-size:11px">48,073 cos</div><div class="asmp-note">529,598 contacts after persona + seniority filtering. Bound campaigns (Xactly: 239 cos, AI Native: 335 cos) excluded from cold universe — they have their own defined TAM.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Intent universe</div><div class="asmp-val" style="font-size:11px">311 cos</div><div class="asmp-note">Intent score > 21 (P90 of companies showing any signal). Removed from cold campaigns to avoid self-competition. Sources: G2 activity, LinkedIn engagement, website retargeting, HubSpot pipeline, Bombora third-party intent.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Signal universe</div><div class="asmp-val" style="font-size:11px">254 cos</div><div class="asmp-note">Openfunnel free-text hiring signals classified by regex into 4 types. Companies remain in cold / intent campaigns — signal is an additive overlay, not a replacement.</div></div>
+      ${isM2 ? `<div class="asmp-row" style="background:#f0fdf4"><div class="asmp-label">M2: T2 excluded</div><div class="asmp-val" style="font-size:11px;color:#16a34a">10,284 cos removed</div><div class="asmp-note">T2 accounts excluded from Model 2. Remaining T1 universe: 38,283 companies = 78% of cold TAM by company count. T2 can be reactivated once T1 pipeline matures.</div></div>` : ''}
+    </div>
+
+    <div class="chart-card full">
+      <div class="card-lbl">Creative &amp; Delivery</div>
+      <div class="card-ttl" style="margin-bottom:14px">Campaign execution assumptions</div>
+      <div class="asmp-row"><div class="asmp-label">Ad format</div><div class="asmp-val" style="font-size:11px">Single Image</div><div class="asmp-note">CPM baseline of $65 corresponds to Single Image ad format. Thought Leadership (TL) format CPM ≈ $40 — potential future lever for CPM reduction without audience changes.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Creative themes</div><div class="asmp-val" style="font-size:11px">2 parallel</div><div class="asmp-note">Spreadsheet theme (evergreen, always-on year-round) and Mid-Year Compensation theme (seasonal, Apr–Jul). Both run simultaneously — not in sprints.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Creative rotation</div><div class="asmp-val" style="font-size:11px">Rotate Evenly</div><div class="asmp-note">LinkedIn Rotate Evenly delivery setting. Each theme gets approximately equal impressions. Effective per-creative frequency = total frequency ÷ 2 themes. At ${isM2?'10×':'12×'}/month total → ~${isM2?'5×':'6×'} per creative.</div></div>
+      <div class="asmp-row"><div class="asmp-label">Campaign structure</div><div class="asmp-val" style="font-size:11px">Industry × Persona</div><div class="asmp-note">Campaigns organised by vertical (industry) at campaign level, persona (Finance / Sales / Ops) at ad set level. Theme is a creative layer within each ad set — not a separate structural dimension.</div></div>
+      <div class="asmp-row"><div class="asmp-label">LinkedIn auction</div><div class="asmp-val" style="font-size:11px">No self-compete</div><div class="asmp-note">Signal campaigns target the same contacts as cold/intent campaigns but do not compete in LinkedIn's auction because they are additive creative — LinkedIn's system serves both based on delivery settings.</div></div>
+    </div>
+  `;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildExecCharts();
+renderPersonaTable();
+</script>
+</body>
+</html>
