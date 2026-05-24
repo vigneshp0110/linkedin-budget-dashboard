@@ -2117,9 +2117,14 @@ function buildArchPanel(){
   const el = document.getElementById('arch-content');
   if(!el) return;
 
-  const totalAccounts = Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.accounts,0);
-  const totalContacts = Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.contacts,0);
-  const activeNames   = new Set(AD_SETS.map(r=>r.name));
+  // Universe = fixed pool across all 8 campaigns
+  const universeAccounts = Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.accounts,0);
+  const universeContacts = Object.values(CAMP_ACCOUNTS).reduce((s,d)=>s+d.contacts,0);
+  // Active targeting scope = model-aware (sum of LinkedIn-matched audiences in active ad sets)
+  const activeContacts   = AD_SETS.reduce((s,r)=>s+r.audience,0);
+  const m1Contacts       = AD_SETS_M1.reduce((s,r)=>s+r.audience,0);
+  const coveragePct      = ((activeContacts/m1Contacts)*100).toFixed(0);
+  const activeNames      = new Set(AD_SETS.map(r=>r.name));
   const skillsNames   = new Set(M2_SKILLS_SETS);
 
   function chipLabel(r){
@@ -2191,23 +2196,43 @@ function buildArchPanel(){
   </div>
 
   <div class="arch-tam-bar" style="margin-bottom:12px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
       <div>
-        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px">Full LinkedIn ICP Universe</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.6)">HubSpot company list · filtered to ICP criteria · matched to LinkedIn</div>
+        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px">LinkedIn ICP Universe</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6)">HubSpot company list · ICP-filtered · matched to LinkedIn</div>
       </div>
-      <div style="display:flex;gap:28px">
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:800;color:#fff">${totalAccounts.toLocaleString()}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:1px">companies</div>
+      <div style="display:flex;gap:0;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden">
+        <!-- Fixed universe -->
+        <div style="padding:10px 20px;border-right:1px solid rgba(255,255,255,.1)">
+          <div style="font-size:9.5px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Total Universe</div>
+          <div style="display:flex;gap:18px">
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:#fff">${universeAccounts.toLocaleString()}</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.45)">companies</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:#fff">${universeContacts.toLocaleString()}</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.45)">contacts available</div>
+            </div>
+          </div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:800;color:#fff">${totalContacts.toLocaleString()}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:1px">contacts</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:800;color:#fff">8</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:1px">campaigns</div>
+        <!-- Model-aware active targeting -->
+        <div style="padding:10px 20px">
+          <div style="font-size:9.5px;color:${isM2?'#fbbf24':'#34d399'};text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">${isM2?'M2 Active Targeting':'M1 Active Targeting'}</div>
+          <div style="display:flex;gap:18px;align-items:center">
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:${isM2?'#fbbf24':'#34d399'}">${activeContacts.toLocaleString()}</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.45)">contacts targeted</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:${isM2?'#fbbf24':'#34d399'}">${coveragePct}%</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.45)">of M1 scope</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:${isM2?'#fbbf24':'#34d399'}">${AD_SETS.length}</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.45)">ad sets</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
